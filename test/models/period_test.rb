@@ -19,7 +19,7 @@ class PeriodTest < ActiveSupport::TestCase
   end
 
   test "from_key returns period for valid key" do
-    period = Period.from_key("last_30_days")
+    period = Period.from_key("current_month")
     assert_equal 30.days.ago.to_date, period.start_date
     assert_equal Date.current, period.end_date
   end
@@ -37,7 +37,7 @@ class PeriodTest < ActiveSupport::TestCase
   end
 
   test "label returns correct label for known period" do
-    period = Period.from_key("last_30_days")
+    period = Period.from_key("current_month")
     assert_equal "Last 30 Days", period.label
   end
 
@@ -47,7 +47,7 @@ class PeriodTest < ActiveSupport::TestCase
   end
 
   test "comparison_label returns correct label for known period" do
-    period = Period.from_key("last_30_days")
+    period = Period.from_key("current_month")
     assert_equal "vs. last month", period.comparison_label
   end
 
