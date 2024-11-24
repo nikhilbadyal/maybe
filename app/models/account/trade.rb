@@ -8,6 +8,10 @@ class Account::Trade < ApplicationRecord
   validates :qty, presence: true
   validates :price, :currency, presence: true
 
+  def money_price
+    Money.new(price, currency || "USD")
+  end
+
   def unrealized_gain_loss
     return nil if qty.negative?
     current_price = security.current_price

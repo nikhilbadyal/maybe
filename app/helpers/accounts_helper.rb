@@ -15,6 +15,8 @@ module AccountsHelper
       "vs. last week"
     when 30, 31
       "vs. last month"
+    when 90
+      "vs. last quarter"
     when 365, 366
       "vs. last year"
     else

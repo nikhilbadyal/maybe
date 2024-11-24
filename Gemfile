@@ -67,6 +67,7 @@ group :development do
   gem "ruby-lsp-rails"
   gem "web-console"
   gem "faker"
+  gem "rubocop"
 end
 
 group :test do
