@@ -31,6 +31,10 @@ class Account::Trade < ApplicationRecord
     prefix + "#{qty.abs} shares of #{security.ticker}"
   end
 
+  def money_price
+    Money.new(price, currency || "USD")
+  end
+
   def unrealized_gain_loss
     return nil if sell?
     current_price = security.current_price
