@@ -44,6 +44,19 @@ class Provider::Synth
   end
 
   def fetch_security_prices(ticker:, mic_code:, start_date:, end_date:)
+    # Fetch the stock exchange based on the mic_code
+    stock_exchange = StockExchange.find_by(mic: mic_code)
+
+    # If no stock exchange is found for the given mic_code, we fall back to USD as default
+    currency = stock_exchange ? stock_exchange.currency_code : 'USD'
+
+    # Log the selected currency and stock exchange details if available
+    if stock_exchange
+      Rails.logger.info("Selected stock exchange for ticker #{ticker} with mic_code #{mic_code}: #{stock_exchange.name}, Currency: #{currency}")
+    else
+      Rails.logger.info("No stock exchange found for ticker #{ticker} with mic_code #{mic_code}. Using fallback currency: #{currency}")
+    end
+
     prices = paginate(
       "#{base_url}/tickers/#{ticker}/open-close",
       mic_code: mic_code,
@@ -54,7 +67,7 @@ class Provider::Synth
         {
           date: price.dig("date"),
           price: price.dig("close")&.to_f || price.dig("open")&.to_f,
-          currency: "USD"
+          currency: currency
         }
       end
     end
