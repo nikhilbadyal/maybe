@@ -118,7 +118,10 @@ class Import < ApplicationRecord
         category: row[category_col_label].to_s,
         tags: row[tags_col_label].to_s,
         entity_type: row[entity_type_col_label].to_s,
-        notes: row[notes_col_label].to_s
+        notes: row[notes_col_label].to_s,
+        country_code: row[country_code_col_label].to_s,
+        exchange_mic: row[exchange_mic_col_label].to_s,
+        exchange_acronym: row[exchange_acronym_col_label].to_s
       )
     end
   end

@@ -74,6 +74,7 @@ group :development do
   gem "web-console"
   gem "faker"
   gem "benchmark-ips"
+  gem "rubocop"
 end
 
 group :test do

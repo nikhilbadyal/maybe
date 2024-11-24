@@ -57,7 +57,7 @@ class AccountTest < ActiveSupport::TestCase
     @account.balances.create! date: 31.days.ago.to_date, balance: 5000, currency: "USD" # out of period range
     @account.balances.create! date: 30.days.ago.to_date, balance: 5000, currency: "USD" # in range
 
-    assert_equal 1, @account.series(period: Period.last_30_days).values.count
+    assert_equal 1, @account.series(period: Period.current_month).values.count
   end
 
   test "generates empty series if no balances and no exchange rate" do

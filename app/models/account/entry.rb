@@ -109,7 +109,7 @@ class Account::Entry < ApplicationRecord
       30.years.ago.to_date
     end
 
-    def daily_totals(entries, currency, period: Period.last_30_days)
+    def daily_totals(entries, currency, period: Period.current_month)
       # Sum spending and income for each day in the period with the given currency
       select(
         "gs.date",
@@ -121,7 +121,7 @@ class Account::Entry < ApplicationRecord
         .group("gs.date")
     end
 
-    def daily_rolling_totals(entries, currency, period: Period.last_30_days)
+    def daily_rolling_totals(entries, currency, period: Period.current_month)
       # Extend the period to include the rolling window
       period_with_rolling = period.extend_backward(period.date_range.count.days)
 

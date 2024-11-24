@@ -19,6 +19,7 @@ module Security::Price::Provided
         if response.success? && response.prices.size > 0
           price = Security::Price.new \
             security: security,
+            ticker: security.ticker,
             date: response.prices.first[:date],
             price: response.prices.first[:price],
             currency: response.prices.first[:currency]
@@ -45,6 +46,7 @@ module Security::Price::Provided
           response.prices.map do |price|
             new_price = Security::Price.find_or_initialize_by(
               security: security,
+              ticker: security.ticker,
               date: price[:date]
             ) do |p|
               p.price = price[:price]

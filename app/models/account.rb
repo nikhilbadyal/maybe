@@ -106,7 +106,7 @@ class Account < ApplicationRecord
     accountable.post_sync
   end
 
-  def series(period: Period.last_30_days, currency: nil)
+  def series(period: Period.current_month, currency: nil)
     balance_series = balances.in_period(period).where(currency: currency || self.currency)
 
     if balance_series.empty? && period.date_range.end == Date.current

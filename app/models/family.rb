@@ -122,7 +122,7 @@ class Family < ApplicationRecord
   end
 
   def snapshot_account_transactions
-    period = Period.last_30_days
+    period = Period.current_month
     results = accounts.active
                       .joins(:entries)
                       .joins("LEFT JOIN transfers ON (transfers.inflow_transaction_id = account_entries.entryable_id OR transfers.outflow_transaction_id = account_entries.entryable_id)")
@@ -154,7 +154,7 @@ class Family < ApplicationRecord
 
   def snapshot_transactions
     candidate_entries = entries.account_transactions.incomes_and_expenses
-    rolling_totals = Account::Entry.daily_rolling_totals(candidate_entries, self.currency, period: Period.last_30_days)
+    rolling_totals = Account::Entry.daily_rolling_totals(candidate_entries, self.currency, period: Period.current_month)
 
     spending = []
     income = []
