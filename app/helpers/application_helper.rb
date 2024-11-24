@@ -149,7 +149,11 @@ module ApplicationHelper
   def format_money(number_or_money, options = {})
     return nil unless number_or_money
 
-    money = Money.new(number_or_money)
+    # Use the provided currency or default to Money.default_currency
+    currency = options[:currency] || Money.default_currency.iso_code
+    money = Money.new(number_or_money, currency) # Pass the currency to Money.new
+
+    # Merge with default options for formatting
     options.reverse_merge!(money.format_options(I18n.locale))
     number_to_currency(money.amount, options)
   end
