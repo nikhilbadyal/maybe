@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_11_22_183828) do
+ActiveRecord::Schema[7.2].define(version: 2024_11_24_151744) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -361,6 +361,9 @@ ActiveRecord::Schema[7.2].define(version: 2024_11_22_183828) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "country_code"
+    t.string "exchange_mic"
+    t.string "exchange_acronym"
     t.index ["import_id"], name: "index_import_rows_on_import_id"
   end
 
@@ -390,6 +393,9 @@ ActiveRecord::Schema[7.2].define(version: 2024_11_22_183828) do
     t.string "date_format", default: "%m/%d/%Y"
     t.string "signage_convention", default: "inflows_positive"
     t.string "error"
+    t.string "country_code_col_label"
+    t.string "exchange_mic_col_label"
+    t.string "exchange_acronym_col_label"
     t.index ["family_id"], name: "index_imports_on_family_id"
   end
 
