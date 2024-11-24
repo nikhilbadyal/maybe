@@ -51,6 +51,11 @@ class Provider::Synth
 
     params[:mic_code] = mic_code if mic_code.present?
 
+    stock_exchange = StockExchange.find_by(mic: mic_code)
+
+    # If no stock exchange is found for the given mic_code, we fall back to USD as default
+    currency = stock_exchange ? stock_exchange.currency_code : "USD"
+
     prices = paginate(
       "#{base_url}/tickers/#{ticker}/open-close",
       params
@@ -59,7 +64,7 @@ class Provider::Synth
         {
           date: price.dig("date"),
           price: price.dig("close")&.to_f || price.dig("open")&.to_f,
-          currency: price.dig("currency") || "USD"
+          currency: currency
         }
       end
     end
