@@ -65,7 +65,7 @@ class Period
 
   class << self
     def default
-      from_key("last_30_days")
+      from_key("current_month")
     end
 
     def from_key(key, fallback: false)

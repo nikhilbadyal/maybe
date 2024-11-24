@@ -2,7 +2,7 @@ module Account::Chartable
   extend ActiveSupport::Concern
 
   class_methods do
-    def balance_series(currency:, period: Period.last_30_days, favorable_direction: "up")
+    def balance_series(currency:, period: Period.current_month, favorable_direction: "up")
       balances = Account::Balance.find_by_sql([
         balance_series_query,
         {
@@ -100,7 +100,7 @@ module Account::Chartable
     classification == "asset" ? "up" : "down"
   end
 
-  def balance_series(period: Period.last_30_days)
+  def balance_series(period: Period.current_month)
     self.class.where(id: self.id).balance_series(
       currency: currency,
       period: period,

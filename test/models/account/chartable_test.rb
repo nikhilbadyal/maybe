@@ -8,7 +8,7 @@ class Account::ChartableTest < ActiveSupport::TestCase
     account.balances.create!(date: 20.days.ago.to_date, balance: 5000, currency: "USD")
     account.balances.create!(date: 10.days.ago.to_date, balance: 5000, currency: "USD")
 
-    period = Period.last_30_days
+    period = Period.current_month
     series = account.balance_series(period: period)
     assert_equal period.days, series.values.count
     assert_equal 0, series.values.first.trend.current.amount
@@ -29,7 +29,7 @@ class Account::ChartableTest < ActiveSupport::TestCase
     liability.balances.create!(date: 20.days.ago.to_date, balance: 1000, currency: "USD")
     liability.balances.create!(date: 10.days.ago.to_date, balance: 1500, currency: "USD")
 
-    series = family.accounts.balance_series(currency: "USD", period: Period.last_30_days)
+    series = family.accounts.balance_series(currency: "USD", period: Period.current_month)
 
     assert_equal 0, series.values.first.trend.current.amount
     assert_equal 3000, series.values.find { |v| v.date == 20.days.ago.to_date }.trend.current.amount
