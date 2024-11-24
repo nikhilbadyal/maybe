@@ -515,6 +515,7 @@ DEPENDENCIES
   rails (~> 7.2.2)
   rails-settings-cached
   redcarpet
+  rubocop
   rubocop-rails-omakase
   ruby-lsp-rails
   selenium-webdriver
