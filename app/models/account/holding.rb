@@ -29,7 +29,35 @@ class Account::Holding < ApplicationRecord
 
   # Basic approximation of cost-basis
   def avg_cost
-    avg_cost = account.holdings.for(security).where("date <= ?", date).average(:price)
+    trades = account.trades.where(security_id: security_id).order(:created_at)
+
+    total_quantity = 0.0
+    cost_basis = 0.0
+
+    trades.each do |trade|
+      qty = trade.qty
+      price = trade.price
+
+      if qty > 0
+        # Buy order: increase cost basis and total quantity
+        cost_basis += qty * price
+        total_quantity += qty
+      elsif qty < 0
+        sell_qty = qty.abs
+
+        if sell_qty <= total_quantity
+          # Sell order: reduce cost basis proportionally
+          avg_price = cost_basis / total_quantity
+          cost_basis -= sell_qty * avg_price
+          total_quantity -= sell_qty
+        else
+          raise "Sell quantity exceeds holdings! Invalid trade data."
+        end
+      end
+    end
+
+    # Calculate average cost
+    avg_cost = total_quantity > 0 ? (cost_basis / total_quantity) : 0
     Money.new(avg_cost, currency)
   end
 
