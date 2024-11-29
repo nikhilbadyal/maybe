@@ -20,6 +20,10 @@ class Investment < ApplicationRecord
     account.balance_money + holdings_value
   end
 
+  def holdings_money
+    Money.new(account.holdings.current.known_value.sum(&:amount) || 0, account.currency)
+  end
+
   def holdings_value
     account.holdings.current.known_value.sum(&:amount) || Money.new(0, account.currency)
   end
