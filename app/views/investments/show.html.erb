@@ -12,7 +12,7 @@
                title: t(".chart_title"),
                tooltip: render(
                  "investments/value_tooltip",
-                 value: @account.value,
+                 value: @account.holdings_money,
                  cash: @account.balance_money
                ) %>
     <% end %>

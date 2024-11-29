@@ -33,6 +33,7 @@ class Account < ApplicationRecord
   accepts_nested_attributes_for :accountable, update_only: true
 
   delegate :value, :series, to: :accountable
+  delegate :holdings_money, :series, to: :accountable
 
   class << self
     def by_group(period: Period.all, currency: Money.default_currency.iso_code)
