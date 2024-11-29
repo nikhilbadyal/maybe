@@ -22,6 +22,9 @@ module Accountable
     account.balance_money
   end
 
+  def holdings_money
+  end
+
   def series(period: Period.all, currency: account.currency)
     balance_series = account.balances.in_period(period).where(currency: currency)
 
