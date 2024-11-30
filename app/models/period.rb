@@ -3,7 +3,7 @@ class Period
 
   class << self
     def from_param(param)
-      find_by_name(param) || self.last_30_days
+      find_by_name(param) || self.last_7_days
     end
 
     def find_by_name(name)
