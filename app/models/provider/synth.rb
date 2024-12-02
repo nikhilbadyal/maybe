@@ -50,13 +50,6 @@ class Provider::Synth
     # If no stock exchange is found for the given mic_code, we fall back to USD as default
     currency = stock_exchange ? stock_exchange.currency_code : 'USD'
 
-    # Log the selected currency and stock exchange details if available
-    if stock_exchange
-      Rails.logger.info("Selected stock exchange for ticker #{ticker} with mic_code #{mic_code}: #{stock_exchange.name}, Currency: #{currency}")
-    else
-      Rails.logger.info("No stock exchange found for ticker #{ticker} with mic_code #{mic_code}. Using fallback currency: #{currency}")
-    end
-
     prices = paginate(
       "#{base_url}/tickers/#{ticker}/open-close",
       mic_code: mic_code,
