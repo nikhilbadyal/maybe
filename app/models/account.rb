@@ -44,7 +44,7 @@ class Account < ApplicationRecord
             accounts.each do |account|
               group.add_value_node(
                 account,
-                account.value.exchange_to(currency, fallback_rate: 0),
+                account.balance_money.exchange_to(currency, fallback_rate: 0),
                 account.series(period: period, currency: currency)
               )
             end

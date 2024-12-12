@@ -11,7 +11,7 @@
         <%= t(".cash") %>
       </div>
       <div class="text-white ml-auto">
-        <%= tag.p format_money(cash, precision: 0) %>
+        <%= tag.p format_money(cash, precision: 0,currency:@account.family.currency) %>
       </div>
     </div>
     <div class="flex">

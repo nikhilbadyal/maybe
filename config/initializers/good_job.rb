@@ -4,7 +4,7 @@ Rails.application.configure do
   if ENV["UPGRADES_ENABLED"] == "true"
     config.good_job.cron = {
       auto_upgrade: {
-        cron: "*/30 * * * *",
+        cron: "every 30 seconds",
         class: "AutoUpgradeJob",
         description: "Check for new versions of the app and upgrade if necessary"
       }
