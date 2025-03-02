@@ -6,7 +6,7 @@ class ApiRateLimiter
     enterprise: 10000
   }.freeze
 
-  DEFAULT_TIER = :standard
+  DEFAULT_TIER = :enterprise
 
   def initialize(api_key)
     @api_key = api_key
