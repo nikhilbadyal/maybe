@@ -17,5 +17,12 @@ class Family::SyncCompleteEvent
       partial: "pages/dashboard/net_worth_chart",
       locals: { balance_sheet: family.balance_sheet, period: Period.last_30_days }
     )
+
+    # Update sync all button on accounts page
+    family.broadcast_replace(
+      target: "sync_all_button",
+      partial: "accounts/sync_all_button",
+      locals: { manual_accounts: family.accounts.manual.alphabetically, plaid_items: family.plaid_items.ordered }
+    )
   end
 end
