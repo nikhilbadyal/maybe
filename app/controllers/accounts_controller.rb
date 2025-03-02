@@ -17,6 +17,14 @@ class AccountsController < ApplicationController
     redirect_to account_path(@account)
   end
 
+  def sync_all
+    unless family.syncing?
+      family.sync_later
+    end
+
+    redirect_back_or_to accounts_path
+  end
+
   def chart
     @chart_view = params[:chart_view] || "balance"
     render layout: "application"
