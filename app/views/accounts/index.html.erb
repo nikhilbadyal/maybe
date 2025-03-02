@@ -1,6 +1,9 @@
 <header class="flex justify-between items-center text-primary font-medium">
   <h1 class="text-xl"><%= t(".accounts") %></h1>
   <div class="flex items-center gap-5">
+    <%= turbo_frame_tag "sync_all_button" do %>
+      <%= render "accounts/sync_all_button", manual_accounts: @manual_accounts, plaid_items: @plaid_items %>
+    <% end %>
     <div class="flex items-center gap-2">
       <%= render DS::Link.new(
         text: "New account",
@@ -12,6 +15,12 @@
     </div>
   </div>
 </header>
+
+<% if (@manual_accounts.any? || @plaid_items.any?) && Current.family.last_synced_at.present? %>
+  <p class="text-sm text-secondary">
+    Last synced <%= time_ago_in_words(Current.family.last_synced_at) %> ago
+  </p>
+<% end %>
 
 <% if @manual_accounts.empty? && @plaid_items.empty? %>
   <%= render "empty" %>

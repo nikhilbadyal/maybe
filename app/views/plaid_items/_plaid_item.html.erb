@@ -55,7 +55,7 @@
             href: edit_plaid_item_path(plaid_item),
             frame: "modal"
           ) %>
-        <% elsif Rails.env.development? %>
+        <% elsif Rails.env.development? || self_hosted? %>
           <%= icon(
             "refresh-cw",
             as_button: true,
