@@ -27,43 +27,47 @@
 # https://github.com/maybe-finance/maybe/discussions/categories/general
 #
 
-x-db-env: &db_env
-  POSTGRES_USER: ${POSTGRES_USER:-maybe_user}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maybe_password}
-  POSTGRES_DB: ${POSTGRES_DB:-maybe_production}
-
 x-rails-env: &rails_env
-  <<: *db_env
-  SECRET_KEY_BASE: ${SECRET_KEY_BASE:-a7523c3d0ae56415046ad8abae168d71074a79534a7062258f8d1d51ac2f76d3c3bc86d86b6b0b307df30d9a6a90a2066a3fa9e67c5e6f374dbd7dd4e0778e13}
-  SELF_HOSTED: "true"
-  RAILS_FORCE_SSL: "false"
-  RAILS_ASSUME_SSL: "false"
-  DB_HOST: db
-  DB_PORT: 5432
+  RAILS_FORCE_SSL: "true"
+  RAILS_ASSUME_SSL: "true"
   REDIS_URL: redis://redis:6379/1
-# NOTE: enabling OpenAI will incur costs when you use AI-related features in the app (chat, rules).  Make sure you have set appropriate spend limits on your account before adding this.
   OPENAI_ACCESS_TOKEN: ${OPENAI_ACCESS_TOKEN}
 
 services:
   web:
-    image: ghcr.io/maybe-finance/maybe:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: maybe
+    container_name: maybe-web
     volumes:
       - app-storage:/rails/storage
     ports:
-      - 3000:3000
+      - "80:80"
     restart: unless-stopped
     environment:
       <<: *rails_env
+    env_file:
+      - .env.docker
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/sessions/new" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - maybe_net
 
   worker:
-    image: ghcr.io/maybe-finance/maybe:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: maybe-worker
+    container_name: maybe-worker
     command: bundle exec sidekiq
     restart: unless-stopped
     depends_on:
@@ -71,27 +75,16 @@ services:
         condition: service_healthy
     environment:
       <<: *rails_env
-    networks:
-      - maybe_net
-
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      <<: *db_env
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    env_file:
+      - .env.docker
     networks:
       - maybe_net
 
   redis:
     image: redis:latest
     restart: unless-stopped
+    pull_policy: always
+    container_name: maybe-redis
     volumes:
       - redis-data:/data
     healthcheck:
@@ -102,10 +95,38 @@ services:
     networks:
       - maybe_net
 
+#  ngrok:
+#    image: ngrok/ngrok:latest
+#    restart: unless-stopped
+#    volumes:
+#      - ./bin/configure-ngrok.sh:/configure-ngrok.sh
+#    env_file:
+#      - .env.docker
+#    entrypoint: [ "/bin/sh", "-c" ]
+#    command: |
+#      /configure-ngrok.sh
+#    depends_on:
+#      - web
+#    networks:
+#      - maybe_net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: maybe-cloudflared
+    command: tunnel run --token ${CLOUDFLARED_TOKEN}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      - web
+    env_file:
+      - .env.docker
+    networks:
+      - maybe_net
+
 volumes:
   app-storage:
-  postgres-data:
   redis-data:
+  ngrok-data:
 
 networks:
   maybe_net:

@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # Uses basic auth - see config/initializers/sidekiq.rb
   mount Sidekiq::Web => "/sidekiq"
 
+  # Uses basic auth - see config/initializers/active_storage_dashboard.rb
+  mount ActiveStorageDashboard::Engine, at: "/active-storage-dashboard"
+
   # AI chats
   resources :chats do
     resources :messages, only: :create
@@ -53,6 +56,7 @@ Rails.application.routes.draw do
     resource :preferences, only: :show
     resource :hosting, only: %i[show update] do
       delete :clear_cache, on: :collection
+      delete :clear_syncs, on: :collection
     end
     resource :billing, only: :show
     resource :security, only: :show
@@ -109,6 +113,10 @@ Rails.application.routes.draw do
   end
 
   resources :accounts, only: %i[index new], shallow: true do
+    collection do
+      post :sync_all
+    end
+
     member do
       post :sync
       get :chart
@@ -201,14 +209,11 @@ Rails.application.routes.draw do
         end
       end
 
-      # Test routes for API controller testing (only available in test environment)
-      if Rails.env.test?
-        get "test", to: "test#index"
-        get "test_not_found", to: "test#not_found"
-        get "test_family_access", to: "test#family_access"
-        get "test_scope_required", to: "test#scope_required"
-        get "test_multiple_scopes_required", to: "test#multiple_scopes_required"
-      end
+      get "test", to: "test#index"
+      get "test_not_found", to: "test#not_found"
+      get "test_family_access", to: "test#family_access"
+      get "test_scope_required", to: "test#scope_required"
+      get "test_multiple_scopes_required", to: "test#multiple_scopes_required"
     end
   end
 
@@ -253,6 +258,9 @@ Rails.application.routes.draw do
 
   get "privacy", to: redirect("https://maybefinance.com/privacy")
   get "terms", to: redirect("https://maybefinance.com/tos")
+
+  # CSV export for net worth data
+  get "download_net_worth_data", to: "pages#download_net_worth_data"
 
   # Defines the root path route ("/")
   root "pages#dashboard"
