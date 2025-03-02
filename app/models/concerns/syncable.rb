@@ -50,12 +50,12 @@ module Syncable
     latest_sync&.error || latest_sync&.children&.map(&:error)&.compact&.first
   end
 
-  def last_synced_at
-    latest_sync&.completed_at
-  end
-
   def last_sync_created_at
     latest_sync&.created_at
+  end
+
+  def last_synced_at
+    syncs.completed.ordered.first&.completed_at
   end
 
   private
