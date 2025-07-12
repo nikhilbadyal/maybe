@@ -1,7 +1,7 @@
 class Sync < ApplicationRecord
   # We run a cron that marks any syncs that have not been resolved in 24 hours as "stale"
   # Syncs often become stale when new code is deployed and the worker restarts
-  STALE_AFTER = 24.hours
+  STALE_AFTER = 5.minutes
 
   # The max time that a sync will show in the UI (after 5 minutes)
   VISIBLE_FOR = 5.minutes
