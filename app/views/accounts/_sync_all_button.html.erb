@@ -1,0 +1,17 @@
+<%# locals: (manual_accounts:, plaid_items:) %>
+
+<% if manual_accounts.any? || plaid_items.any? %>
+  <% if Current.family.syncing? %>
+    <%= render partial: "shared/sync_indicator", locals: { size: "sm" } %>
+  <% else %>
+    <%= icon(
+      "refresh-cw",
+      as_button: true,
+      size: "sm",
+      href: sync_all_accounts_path,
+      method: :post,
+      title: "Sync all accounts",
+      class: "text-secondary hover:text-primary"
+    ) %>
+  <% end %>
+<% end %> 
