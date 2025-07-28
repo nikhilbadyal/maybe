@@ -6,8 +6,8 @@ ruby file: ".ruby-version"
 gem "rails", "~> 7.2.2"
 
 # Drivers
-gem "pg", "~> 1.5"
-gem "redis", "~> 5.4"
+gem "pg", "~> 1.5.9"
+gem "redis", "~> 5.4.1"
 
 # Deployment
 gem "puma", ">= 5.0"
@@ -24,9 +24,7 @@ gem "stimulus-rails"
 gem "turbo-rails"
 gem "view_component"
 
-# https://github.com/lookbook-hq/lookbook/issues/712
-# TODO: Remove max version constraint when fixed
-gem "lookbook", "2.3.11"
+gem "lookbook"
 
 gem "hotwire_combobox"
 
@@ -44,18 +42,18 @@ gem "logtail-rails"
 gem "skylight", groups: [ :production ]
 
 # Active Storage
-gem "aws-sdk-s3", "~> 1.177.0", require: false
+gem "aws-sdk-s3", "~> 1.194.0", require: false
 gem "image_processing", ">= 1.2"
 
 # Other
 gem "ostruct"
-gem "bcrypt", "~> 3.1"
+gem "bcrypt", "~> 3.1.20"
 gem "jwt"
 gem "jbuilder"
 
 # OAuth & API Security
 gem "doorkeeper"
-gem "rack-attack", "~> 6.6"
+gem "rack-attack", "~> 6.7.0"
 gem "faraday"
 gem "faraday-retry"
 gem "faraday-multipart"
@@ -70,13 +68,13 @@ gem "stripe"
 gem "intercom-rails"
 gem "plaid"
 gem "rotp", "~> 6.3"
-gem "rqrcode", "~> 3.0"
+gem "rqrcode", "~> 3.1.0"
 gem "activerecord-import"
-gem "rubyzip", "~> 2.3"
+gem "rubyzip", "~> 2.4.1"
 
 # State machines
 gem "aasm"
-gem "after_commit_everywhere", "~> 1.0"
+gem "after_commit_everywhere", "~> 1.6.0"
 
 # AI
 gem "ruby-openai"
