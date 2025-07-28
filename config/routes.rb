@@ -275,6 +275,9 @@ Rails.application.routes.draw do
   get "privacy", to: redirect("https://maybefinance.com/privacy")
   get "terms", to: redirect("https://maybefinance.com/tos")
 
+  # CSV export for net worth data
+  get "download_net_worth_data", to: "pages#download_net_worth_data"
+
   # Defines the root path route ("/")
   root "pages#dashboard"
 end

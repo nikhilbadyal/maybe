@@ -21,6 +21,16 @@
       </div>
     </div>
 
+    <div class="flex items-center gap-2">
+      <% if series.any? %>
+        <%= render DS::Link.new(
+          text: "CSV",
+          href: download_net_worth_data_path(format: :csv, period: period.key),
+          icon: "download",
+          variant: :outline
+        ) %>
+      <% end %>
+
     <%= form_with url: root_path, method: :get, data: { controller: "auto-submit-form" } do |form| %>
       <%= form.select :period,
                     Period.as_options,
@@ -28,6 +38,7 @@
                     data: { "auto-submit-form-target": "auto" },
                     class: "bg-container border border-secondary font-medium rounded-lg px-3 py-2 text-sm pr-7 cursor-pointer text-primary focus:outline-hidden focus:ring-0" %>
     <% end %>
+  </div>
   </div>
 
   <% if series.any? %>
