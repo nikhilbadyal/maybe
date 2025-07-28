@@ -3,7 +3,7 @@ class Entry < ApplicationRecord
 
   monetize :amount
 
-  belongs_to :account
+  belongs_to :account, touch: true
   belongs_to :transfer, optional: true
   belongs_to :import, optional: true
 
