@@ -21,6 +21,12 @@
   </div>
 </header>
 
+<% if (@manual_accounts.any? || @plaid_items.any?) && Current.family.last_synced_at.present? %>
+  <p class="text-sm text-secondary">
+    Last synced <%= time_ago_in_words(Current.family.last_synced_at) %> ago
+  </p>
+<% end %>
+
 <% if @manual_accounts.empty? && @plaid_items.empty? %>
   <%= render "empty" %>
 <% else %>
