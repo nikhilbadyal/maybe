@@ -204,4 +204,72 @@ class Settings::ApiKeysTest < ApplicationSystemTestCase
     # Should show some indication of expiration (exact format may vary)
     assert_no_text "Never expires"
   end
+
+  test "should handle corrupted API key gracefully through UI workflow" do
+    # Simulate a scenario where a corrupted key has already been auto-revoked
+    # (which is what would happen in real life)
+    api_key = ApiKey.create!(
+      user: @user,
+      name: "Previously Corrupted API Key",
+      display_key: "corrupted_key_123",
+      scopes: [ "read" ],
+      revoked_at: 1.minute.ago  # Already revoked due to corruption
+    )
+
+    visit settings_api_key_path
+
+    # Should show no API key state since the corrupted one was revoked
+    assert_text "Create Your API Key"
+    assert_text "Get programmatic access to your Maybe data"
+
+    # User can create a new key to recover
+    click_link "Create API Key"
+
+    fill_in "API Key Name", with: "Replacement Key"
+    choose "Read Only"
+    click_button "Create API Key"
+
+    # Should successfully create new key and show it
+    assert_current_path settings_api_key_path
+    assert_text "Your API Key"
+    assert_text "Replacement Key"
+    assert_text "Read Only"
+
+    # Should be able to copy the new key
+    assert_button "Copy API Key"
+
+    # Verify old key is still revoked
+    api_key.reload
+    assert api_key.revoked?
+  end
+
+  test "should allow user to navigate away and return when no API key exists" do
+    # Start with no API keys (simulating post-corruption cleanup state)
+    visit settings_api_key_path
+
+    # Should show no API key state
+    assert_text "Create Your API Key"
+
+    # User decides to navigate away first
+    click_link "Account" # Go to account settings
+    assert_current_path settings_profile_path
+    assert_text "Account"
+
+    # User can navigate back to API keys
+    click_link "API Key"
+
+    # Should still show no API key page
+    assert_current_path settings_api_key_path
+    assert_text "Create Your API Key"
+
+    # User can now create a new key
+    click_link "Create API Key"
+
+    fill_in "API Key Name", with: "New API Key"
+    choose "Read/Write"
+    click_button "Create API Key"
+
+    assert_text "New API Key"
+    assert_text "Read/Write"
+  end
 end

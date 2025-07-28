@@ -188,4 +188,131 @@ end
     assert_equal "Random Key Test", api_key.name
     assert_includes api_key.scopes, "read"
   end
+
+  # Decryption error handling tests
+  test "should handle decryption error when showing API key" do
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "Corrupted API Key",
+      display_key: "corrupted_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Simulate decryption error - stub on all instances since controller loads fresh instance
+    ApiKey.any_instance.stubs(:plain_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+
+    get settings_api_key_path
+
+    assert_redirected_to new_settings_api_key_path(regenerate: true)
+    follow_redirect!
+
+    assert_equal "We were unable to decrypt your existing API key. It has been revoked. Please generate a new one.", flash[:alert]
+
+    # Verify the corrupted key was revoked
+    @api_key.reload
+    assert @api_key.revoked?
+  end
+
+  test "should handle decryption error when destroying API key" do
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "Corrupted API Key",
+      display_key: "corrupted_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Simulate decryption error - stub on all instances since controller loads fresh instance
+    ApiKey.any_instance.stubs(:plain_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+
+    delete settings_api_key_path
+
+    assert_redirected_to new_settings_api_key_path(regenerate: true)
+    follow_redirect!
+
+    assert_equal "We were unable to decrypt your existing API key. It has been revoked. Please generate a new one.", flash[:alert]
+
+    # Verify the corrupted key was revoked
+    @api_key.reload
+    assert @api_key.revoked?
+  end
+
+  test "should handle decryption error when no API key ID available" do
+    # Create a real API key but stub its ID to return nil to test the edge case
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "API Key with nil ID",
+      display_key: "test_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Simulate both the decryption error and nil ID scenario
+    ApiKey.any_instance.stubs(:plain_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+    ApiKey.any_instance.stubs(:id).returns(nil)
+
+    get settings_api_key_path
+
+    assert_redirected_to new_settings_api_key_path(regenerate: true)
+    follow_redirect!
+
+    assert_equal "An error occurred with your API key. Please generate a new one.", flash[:alert]
+  end
+
+  test "should revoke corrupted key using update_all for efficiency" do
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "Corrupted API Key",
+      display_key: "corrupted_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Mock the chained where().update_all() call
+    mock_relation = mock("relation")
+    mock_relation.expects(:update_all).with(has_key(:revoked_at)).once
+    ApiKey.expects(:where).with(id: @api_key.id).returns(mock_relation)
+
+    # Simulate decryption error - stub on all instances since controller loads fresh instance
+    ApiKey.any_instance.stubs(:plain_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+
+    get settings_api_key_path
+
+    # Add assertion to satisfy test requirement
+    assert_redirected_to new_settings_api_key_path(regenerate: true)
+  end
+
+  test "should proactively trigger decryption in before_action" do
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "Test API Key",
+      display_key: "test_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Verify that plain_key is called (it will be called in both before_action and view)
+    ApiKey.any_instance.expects(:plain_key).at_least_once
+
+    get settings_api_key_path
+
+    assert_response :success
+  end
+
+  test "should not execute show action when decryption error occurs in before_action" do
+    @api_key = ApiKey.create!(
+      user: @user,
+      name: "Corrupted API Key",
+      display_key: "corrupted_key_123",
+      scopes: [ "read" ]
+    )
+
+    # Simulate decryption error - stub on all instances since controller loads fresh instance
+    ApiKey.any_instance.stubs(:plain_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+
+    get settings_api_key_path
+
+    # Should redirect before the show action executes
+    assert_redirected_to new_settings_api_key_path(regenerate: true)
+
+    # The show action should not have set @current_api_key
+    # We can verify this by checking that the redirect happened immediately
+    assert_equal "We were unable to decrypt your existing API key. It has been revoked. Please generate a new one.", flash[:alert]
+  end
 end

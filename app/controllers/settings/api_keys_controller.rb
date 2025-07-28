@@ -48,6 +48,20 @@ class Settings::ApiKeysController < ApplicationController
 
     def set_api_key
       @api_key = Current.user.api_keys.active.first
+
+      # Proactively trigger decryption to catch the error here. This prevents the
+      # error from being raised in the view, which is harder to rescue from. If
+      # this before_action redirects, the `show` action will not be executed.
+      @api_key&.plain_key
+    rescue ActiveRecord::Encryption::Errors::Decryption
+      key_id_to_revoke = @api_key&.id
+      if key_id_to_revoke
+        ApiKey.where(id: key_id_to_revoke).update_all(revoked_at: Time.current)
+        flash[:alert] = "We were unable to decrypt your existing API key. It has been revoked. Please generate a new one."
+      else
+        flash[:alert] = "An error occurred with your API key. Please generate a new one."
+      end
+      redirect_to new_settings_api_key_path(regenerate: true)
     end
 
     def api_key_params

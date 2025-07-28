@@ -193,6 +193,27 @@ class ApiKeyTest < ActiveSupport::TestCase
     assert_equal original_key, @api_key.plain_key
   end
 
+  test "should return plain key when decryption succeeds" do
+    @api_key.save!
+    original_key = @api_key.key
+
+    # plain_key should return the decrypted display_key
+    assert_equal original_key, @api_key.plain_key
+    assert_not_nil @api_key.plain_key
+  end
+
+  test "should allow decryption error to bubble up from plain_key method" do
+    @api_key.save!
+
+    # Stub the display_key to raise decryption error
+    @api_key.stubs(:display_key).raises(ActiveRecord::Encryption::Errors::Decryption)
+
+    # plain_key should not rescue the error - let it bubble up to be handled at controller level
+    assert_raises(ActiveRecord::Encryption::Errors::Decryption) do
+      @api_key.plain_key
+    end
+  end
+
   test "should not allow multiple scopes" do
     @api_key.scopes = [ "read", "read_write" ]
     assert_not @api_key.valid?
