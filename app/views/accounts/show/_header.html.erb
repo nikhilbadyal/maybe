@@ -19,6 +19,7 @@
                 ) %>
             <% end %>
           </div>
+          <p class="text-sm text-secondary">Last Sync: <%= account.updated_at.strftime("%-dth of %B %Y %I:%M %p") %></p>
           <% if subtitle.present? %>
             <p class="text-sm text-secondary"><%= subtitle %></p>
           <% end %>
