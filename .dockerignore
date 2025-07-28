@@ -43,3 +43,4 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+compose.example.yml
