@@ -5,14 +5,6 @@
       <%= render "accounts/sync_all_button", manual_accounts: @manual_accounts, plaid_items: @plaid_items %>
     <% end %>
     <div class="flex items-center gap-2">
-      <%= icon(
-            "refresh-cw",
-            as_button: true,
-            size: "sm",
-            href: sync_all_accounts_path,
-            disabled: Current.family.syncing?,
-            frame: :_top
-          ) %>
       <%= render DS::Link.new(
         text: "New account",
         href: new_account_path(return_to: accounts_path),
