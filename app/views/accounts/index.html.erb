@@ -1,6 +1,9 @@
 <header class="flex justify-between items-center text-primary font-medium">
   <h1 class="text-xl"><%= t(".accounts") %></h1>
   <div class="flex items-center gap-5">
+    <%= turbo_frame_tag "sync_all_button" do %>
+      <%= render "accounts/sync_all_button", manual_accounts: @manual_accounts, plaid_items: @plaid_items %>
+    <% end %>
     <div class="flex items-center gap-2">
       <%= icon(
             "refresh-cw",

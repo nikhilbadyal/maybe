@@ -117,6 +117,18 @@ Rails.application.routes.draw do
     resources :mappings, only: :update, module: :import
   end
 
+  resources :accounts, only: %i[index new], shallow: true do
+    collection do
+      post :sync_all
+    end
+
+    member do
+      post :sync
+      get :chart
+      get :sparkline
+    end
+  end
+
   resources :holdings, only: %i[index new show destroy]
   resources :trades, only: %i[show new create update destroy]
   resources :valuations, only: %i[show new create update destroy] do

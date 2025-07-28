@@ -33,6 +33,14 @@ class AccountsController < ApplicationController
     redirect_to account_path(@account)
   end
 
+  def sync_all
+    unless family.syncing?
+      family.sync_later
+    end
+
+    redirect_back_or_to accounts_path
+  end
+
   def sparkline
     etag_key = @account.family.build_cache_key("#{@account.id}_sparkline", invalidate_on_data_updates: true)
 
