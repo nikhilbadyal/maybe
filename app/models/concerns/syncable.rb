@@ -51,7 +51,7 @@ module Syncable
   end
 
   def last_synced_at
-    latest_sync&.completed_at
+    syncs.completed.ordered.first&.completed_at
   end
 
   def last_sync_created_at
