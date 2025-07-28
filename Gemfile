@@ -79,6 +79,8 @@ gem "after_commit_everywhere", "~> 1.6.0"
 # AI
 gem "ruby-openai"
 
+gem "active_storage_dashboard"
+
 group :development, :test do
   gem "debug", platforms: %i[mri windows]
   gem "brakeman", require: false

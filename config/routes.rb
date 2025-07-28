@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # Uses basic auth - see config/initializers/sidekiq.rb
   mount Sidekiq::Web => "/sidekiq"
 
+  # Uses basic auth - see config/initializers/active_storage_dashboard.rb
+  mount ActiveStorageDashboard::Engine, at: "/active-storage-dashboard"
+
   # AI chats
   resources :chats do
     resources :messages, only: :create

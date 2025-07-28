@@ -54,6 +54,8 @@ GEM
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
+    active_storage_dashboard (0.1.8)
+      rails (>= 5.2.0)
     activejob (7.2.2.1)
       activesupport (= 7.2.2.1)
       globalid (>= 0.3.6)
@@ -620,6 +622,7 @@ PLATFORMS
 
 DEPENDENCIES
   aasm
+  active_storage_dashboard
   activerecord-import
   after_commit_everywhere (~> 1.6.0)
   aws-sdk-s3 (~> 1.194.0)
