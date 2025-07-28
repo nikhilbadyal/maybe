@@ -18,16 +18,36 @@
               <span class="text-sm">Exporting...</span>
             </div>
           <% elsif export.completed? %>
-            <%= link_to download_family_export_path(export),
-                class: "flex items-center gap-2 text-primary hover:text-primary-hover",
-                data: { turbo_frame: "_top" } do %>
-              <%= icon "download", class: "w-5 h-5" %>
-              <span class="text-sm font-medium">Download</span>
-            <% end %>
+            <div class="flex items-center gap-4">
+              <%= link_to download_family_export_path(export),
+                  class: "flex items-center gap-2 text-primary hover:text-primary-hover",
+                  data: { turbo_frame: "_top" } do %>
+                <%= icon "download", class: "w-5 h-5" %>
+                <span class="text-sm font-medium">Download</span>
+              <% end %>
+
+              <%= button_to family_export_path(export),
+                  method: :delete,
+                  data: { turbo_confirm: "Are you sure you want to delete this export?" },
+                  class: "flex items-center gap-2 text-destructive hover:text-destructive-hover" do %>
+                <%= icon "trash", class: "w-5 h-5" %>
+                <span class="text-sm font-medium">Delete</span>
+              <% end %>
+            </div>
           <% elsif export.failed? %>
-            <div class="flex items-center gap-2 text-destructive">
-              <%= icon "alert-circle", class: "w-4 h-4" %>
-              <span class="text-sm">Failed</span>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2 text-destructive">
+                <%= icon "alert-circle", class: "w-4 h-4" %>
+                <span class="text-sm">Failed</span>
+              </div>
+
+              <%= button_to family_export_path(export),
+                  method: :delete,
+                  data: { turbo_confirm: "Are you sure you want to delete this export?" },
+                  class: "flex items-center gap-2 text-destructive hover:text-destructive-hover" do %>
+                <%= icon "trash", class: "w-5 h-5" %>
+                <span class="text-sm font-medium">Delete</span>
+              <% end %>
             </div>
           <% end %>
         </div>

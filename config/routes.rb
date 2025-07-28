@@ -27,7 +27,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :family_exports, only: %i[new create index] do
+  resources :family_exports, only: %i[new create index destroy] do
     member do
       get :download
     end

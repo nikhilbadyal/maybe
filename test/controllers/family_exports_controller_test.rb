@@ -70,4 +70,35 @@ class FamilyExportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_profile_path
     assert_equal "Export not ready for download", flash[:alert]
   end
+
+  test "admin can delete an export" do
+    export = @family.family_exports.create!
+    assert_difference("FamilyExport.count", -1) do
+      delete family_export_path(export)
+    end
+
+    assert_redirected_to settings_profile_path
+    assert_equal "Export deleted.", flash[:notice]
+  end
+
+  test "non-admin cannot delete an export" do
+    sign_in @non_admin
+    export = @family.family_exports.create!
+
+    assert_no_difference("FamilyExport.count") do
+      delete family_export_path(export)
+    end
+    assert_redirected_to root_path
+  end
+
+  test "admin cannot delete an export from another family" do
+    other_family = families(:empty)
+    export = other_family.family_exports.create!
+
+    assert_no_difference("FamilyExport.count") do
+      delete family_export_path(export)
+    end
+
+    assert_response :not_found
+  end
 end
