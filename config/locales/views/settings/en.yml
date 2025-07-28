@@ -11,6 +11,8 @@ en:
         country: Country
         currency: Currency
         date_format: Date format
+        data_provider_subtitle: Control whether Maybe fetches historical data for exchange rates and security prices
+        data_provider_title: Data Provider
         general_subtitle: Configure your preferences
         general_title: General
         default_period: Default Period
@@ -22,6 +24,8 @@ en:
         theme_system: System
         theme_title: Theme
         timezone: Timezone
+        use_data_provider: Use Data Provider
+        use_data_provider_description: When enabled, Maybe will fetch historical exchange rates, security prices, and other data to calculate accurate historical account balances. Disable this if you prefer to manage data manually.
     profiles:
       destroy:
         cannot_remove_self: You cannot remove yourself from the account.

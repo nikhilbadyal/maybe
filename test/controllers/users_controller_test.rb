@@ -31,6 +31,38 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Your profile has been updated.", flash[:notice]
   end
 
+  test "can update data provider preference" do
+    assert @user.family.use_data_provider?, "Family should have use_data_provider enabled by default"
+
+    patch user_url(@user), params: {
+      user: {
+        family_attributes: {
+          id: @user.family.id,
+          use_data_provider: "0"
+        }
+      }
+    }
+
+    assert_redirected_to settings_profile_url
+    assert_not @user.family.reload.use_data_provider?, "Data provider preference should be disabled"
+  end
+
+  test "can enable data provider preference" do
+    @user.family.update!(use_data_provider: false)
+
+    patch user_url(@user), params: {
+      user: {
+        family_attributes: {
+          id: @user.family.id,
+          use_data_provider: "1"
+        }
+      }
+    }
+
+    assert_redirected_to settings_profile_url
+    assert @user.family.reload.use_data_provider?, "Data provider preference should be enabled"
+  end
+
   test "admin can reset family data" do
     account = accounts(:investment)
     category = categories(:income)

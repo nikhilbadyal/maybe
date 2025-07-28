@@ -41,6 +41,33 @@
   </div>
 <% end %>
 
+<%= settings_section title: t(".data_provider_title"), subtitle: t(".data_provider_subtitle") do %>
+  <div>
+    <%= styled_form_with model: @user, class: "space-y-4", data: { controller: "auto-submit-form" } do |form| %>
+      <%= form.hidden_field :redirect_to, value: "preferences" %>
+
+      <%= form.fields_for :family do |family_form| %>
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-primary mb-1"><%= t(".use_data_provider") %></label>
+            <p class="text-xs text-secondary"><%= t(".use_data_provider_description") %></p>
+          </div>
+          <div class="ml-4">
+            <%= render DS::Toggle.new(
+              id: "family_use_data_provider",
+              name: "user[family_attributes][use_data_provider]",
+              checked: @user.family.use_data_provider?,
+              checked_value: "1",
+              unchecked_value: "0",
+              data: { auto_submit_form_target: "auto" }
+            ) %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
 <%= settings_section title: t(".theme_title"), subtitle: t(".theme_subtitle") do %>
   <div data-controller="theme" data-theme-user-preference-value="<%= @user.theme %>">
     <%= form_with model: @user, class: "flex flex-col md:flex-row justify-between items-center gap-4", id: "theme_form",

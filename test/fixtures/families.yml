@@ -1,5 +1,7 @@
 empty:
   name: Family
+  use_data_provider: true
 
 dylan_family:
   name: The Dylan Family
+  use_data_provider: true
