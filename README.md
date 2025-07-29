@@ -4,7 +4,7 @@
 # Maybe: The personal finance app for everyone
 
 > [!IMPORTANT]
-> This repository is no longer actively maintained. You can read more about this in our [final release](https://github.com/maybe-finance/maybe/releases/tag/v0.6.0).
+> This original repository is no longer actively maintained. This is my personal fork with few fixed and new feature which i find useful.
 
 ## Maybe Hosting
 
