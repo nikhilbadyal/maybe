@@ -3,10 +3,90 @@ module Api
     class AuthController < BaseController
       include Invitable
 
+      resource_description do
+        short "User authentication and account management"
+        formats [ "json" ]
+        api_version "v1"
+        tags "authentication", "user_management"
+        description <<-EOS
+          ## Authentication Endpoints
+
+          Handle user registration, login, and token management for the Maybe API.
+
+          ### Authentication Flow
+          1. **Register** a new account or **login** with existing credentials
+          2. Receive OAuth2 access and refresh tokens
+          3. Use access token in `Authorization: Bearer <token>` header
+          4. Refresh tokens before expiration using `/auth/refresh`
+
+          ### Security Features
+          - Multi-factor authentication (MFA) support
+          - Device tracking and management
+          - Token refresh mechanism
+          - Invite code system for controlled access
+        EOS
+        meta module: "Authentication", priority: "critical"
+      end
+
       skip_before_action :authenticate_request!
       skip_before_action :check_api_key_rate_limit
       skip_before_action :log_api_access
 
+      api :POST, "/auth/signup", "Register a new user account"
+      description <<-EOS
+        Create a new user account with email and password. Optionally accepts an invite code
+        if the platform requires invitations. Returns OAuth2 tokens for immediate API access.
+      EOS
+      param :invite_code, String, desc: "Invite code for registration (required if platform uses invites)", required: false, example: "WELCOME2024"
+      param :user, Hash, desc: "User registration details", required: true do
+        param :email, String, desc: "User's email address", required: true, example: "john.doe@example.com"
+        param :password, String, desc: "Password (min 8 chars, must include uppercase, lowercase, number, special char)", required: true, example: "SecurePass123!"
+        param :first_name, String, desc: "User's first name", required: true, example: "John"
+        param :last_name, String, desc: "User's last name", required: true, example: "Doe"
+      end
+      param_group :device_info, Api::V1::BaseController
+      tags "authentication", "registration"
+      returns code: 201, desc: "Successfully registered user and created OAuth tokens" do
+        param_group :oauth_token_response, Api::V1::BaseController
+        param_group :user_response, Api::V1::BaseController
+      end
+      returns code: 400, desc: "Bad request - missing device information"
+      returns code: 403, desc: "Forbidden - invite code required or invalid"
+      returns code: 422, desc: "Validation failed - invalid user data or password requirements"
+      example <<-EOS
+        Request:
+        {
+          "invite_code": "WELCOME2024",
+          "user": {
+            "email": "john.doe@example.com",
+            "password": "SecurePass123!",
+            "first_name": "John",
+            "last_name": "Doe"
+          },
+          "device": {
+            "device_id": "iPhone_12345",
+            "device_name": "John's iPhone",
+            "device_type": "iOS",#{' '}
+            "os_version": "17.1.2",
+            "app_version": "1.2.0"
+          }
+        }
+
+        Response:
+        {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "def50200abc123def456...",
+          "token_type": "Bearer",
+          "expires_in": 2592000,
+          "created_at": 1640995200,
+          "user": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "email": "john.doe@example.com",
+            "first_name": "John",
+            "last_name": "Doe"
+          }
+        }
+      EOS
       def signup
         # Check if invite code is required
         if invite_code_required? && params[:invite_code].blank?
@@ -61,6 +141,58 @@ module Api
         end
       end
 
+      api :POST, "/auth/login", "Authenticate user and retrieve OAuth tokens"
+      description <<-EOS
+        Authenticate with email and password to receive OAuth2 access tokens.
+        Supports multi-factor authentication (MFA) if enabled for the user.
+      EOS
+      param :email, String, desc: "User's email address", required: true, example: "john.doe@example.com"
+      param :password, String, desc: "User's password", required: true, example: "SecurePass123!"
+      param :otp_code, String, desc: "One-time password for MFA (required if user has MFA enabled)", required: false, example: "123456"
+      param_group :device_info, Api::V1::BaseController
+      tags "authentication", "login"
+      returns code: 200, desc: "Successfully authenticated and created OAuth tokens" do
+        param_group :oauth_token_response, Api::V1::BaseController
+        param_group :user_response, Api::V1::BaseController
+      end
+      returns code: 400, desc: "Bad request - missing device information"
+      returns code: 401, desc: "Unauthorized - invalid credentials or MFA required"
+      example <<-EOS
+        Request:
+        {
+          "email": "john.doe@example.com",
+          "password": "SecurePass123!",
+          "otp_code": "123456",
+          "device": {
+            "device_id": "iPhone_12345",
+            "device_name": "John's iPhone",#{' '}
+            "device_type": "iOS",
+            "os_version": "17.1.2",
+            "app_version": "1.2.0"
+          }
+        }
+
+        Response (Success):
+        {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "def50200abc123def456...",
+          "token_type": "Bearer",
+          "expires_in": 2592000,
+          "created_at": 1640995200,
+          "user": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "email": "john.doe@example.com",
+            "first_name": "John",
+            "last_name": "Doe"
+          }
+        }
+
+        Response (MFA Required):
+        {
+          "error": "Two-factor authentication required",
+          "mfa_required": true
+        }
+      EOS
       def login
         user = User.find_by(email: params[:email])
 
@@ -99,6 +231,41 @@ module Api
         end
       end
 
+      api :POST, "/auth/refresh", "Refresh OAuth access token"
+      description <<-EOS
+        Exchange a valid refresh token for a new access token and refresh token pair.
+        The old tokens are revoked in the process for security.
+      EOS
+      param :refresh_token, String, desc: "The refresh token obtained during login or previous refresh", required: true, example: "def50200abc123def456..."
+      param_group :device_info, Api::V1::BaseController
+      tags "authentication", "token_management"
+      returns code: 200, desc: "Successfully refreshed OAuth tokens" do
+        param_group :oauth_token_response, Api::V1::BaseController
+      end
+      returns code: 400, desc: "Bad request - missing refresh token"
+      returns code: 401, desc: "Unauthorized - invalid or revoked refresh token"
+      example <<-EOS
+        Request:
+        {
+          "refresh_token": "def50200abc123def456...",
+          "device": {
+            "device_id": "iPhone_12345",
+            "device_name": "John's iPhone",
+            "device_type": "iOS",
+            "os_version": "17.1.2",#{' '}
+            "app_version": "1.2.0"
+          }
+        }
+
+        Response:
+        {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "def50200xyz789def012...",
+          "token_type": "Bearer",#{' '}
+          "expires_in": 2592000,
+          "created_at": 1640995800
+        }
+      EOS
       def refresh
         # Find the refresh token
         refresh_token = params[:refresh_token]

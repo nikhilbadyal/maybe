@@ -1,5 +1,32 @@
 class Api::V1::UsageController < Api::V1::BaseController
-  # GET /api/v1/usage
+  resource_description do
+    short "API for retrieving API key and rate limit usage information"
+    formats [ "json" ]
+    api_version "v1"
+  end
+
+  api :GET, "/usage", "Retrieve API key and rate limit usage information"
+  returns code: 200, desc: "API key usage and rate limit details" do
+    property :api_key, Hash, desc: "API key details (if authenticated via API key)" do
+      property :name, String, desc: "Name of the API key"
+      property :scopes, String, desc: "Scopes granted to the API key"
+      property :last_used_at, DateTime, desc: "Timestamp of last use"
+      property :created_at, DateTime, desc: "Timestamp of creation"
+    end
+    property :rate_limit, Hash, desc: "Current rate limit status (if authenticated via API key)" do
+      property :tier, String, desc: "Rate limit tier"
+      property :limit, Integer, desc: "Total requests allowed per reset period"
+      property :current_count, Integer, desc: "Requests made in current period"
+      property :remaining, Integer, desc: "Remaining requests in current period"
+      property :reset_in_seconds, Integer, desc: "Time until reset in seconds"
+      property :reset_at, DateTime, desc: "Timestamp when rate limit resets"
+    end
+    property :authentication_method, String, desc: "Authentication method used (oauth)"
+    property :message, String, desc: "Informational message for OAuth authentication"
+  end
+  returns code: 401, desc: "Unauthorized - missing or invalid authentication"
+  returns code: 403, desc: "Forbidden - insufficient scope"
+  returns code: 400, desc: "Bad request - invalid authentication method"
   def show
     return unless authorize_scope!(:read)
 
