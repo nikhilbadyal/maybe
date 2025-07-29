@@ -41,5 +41,11 @@ module Maybe
 
     # Enable Rack::Attack middleware for API rate limiting
     config.middleware.use Rack::Attack
+
+    # Add Apipie checksum middleware for smart API documentation caching
+    # This adds a checksum of the JSON documentation in response headers
+    # which helps clients detect when the API documentation has changed
+    require "apipie/middleware/checksum_in_headers"
+    config.middleware.use Apipie::Middleware::ChecksumInHeaders
   end
 end

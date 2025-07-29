@@ -90,6 +90,9 @@ GEM
     after_commit_everywhere (1.6.0)
       activerecord (>= 4.2)
       activesupport
+    apipie-rails (1.4.2)
+      actionpack (>= 5.0)
+      activesupport (>= 5.0)
     ast (2.4.3)
     aws-eventstream (1.4.0)
     aws-partitions (1.1113.0)
@@ -277,6 +280,8 @@ GEM
     json (2.12.2)
     jwt (2.10.2)
       base64
+    kramdown (2.5.1)
+      rexml (>= 3.3.9)
     language_server-protocol (3.17.0.5)
     launchy (3.1.1)
       addressable (~> 2.8)
@@ -625,6 +630,7 @@ DEPENDENCIES
   active_storage_dashboard
   activerecord-import
   after_commit_everywhere (~> 1.6.0)
+  apipie-rails (~> 1.4)
   aws-sdk-s3 (~> 1.194.0)
   bcrypt (~> 3.1.20)
   benchmark-ips
@@ -652,6 +658,7 @@ DEPENDENCIES
   intercom-rails
   jbuilder
   jwt
+  kramdown (~> 2.5.1)
   letter_opener
   logtail-rails
   lookbook
