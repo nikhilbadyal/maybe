@@ -15,26 +15,21 @@ module Authentication
   end
 
   private
+
     def authenticate_user!
-      if session_record = find_session_by_cookie
+      if (session_record = find_session_by_cookie)
+        preload_family_data(session_record.user) if should_preload_family_data?
         Current.session = session_record
       else
-        if self_hosted_first_login?
-          redirect_to new_registration_url
-        else
-          redirect_to new_session_url
-        end
+        redirect_to self_hosted_first_login? ? new_registration_url : new_session_url
       end
     end
 
     def find_session_by_cookie
       cookie_value = cookies.signed[:session_token]
+      return unless cookie_value.present?
 
-      if cookie_value.present?
-        Session.find_by(id: cookie_value)
-      else
-        nil
-      end
+      Session.find_by(id: cookie_value)
     end
 
     def create_session_for(user)
@@ -54,14 +49,34 @@ module Authentication
 
     def set_sentry_user
       return unless defined?(Sentry) && ENV["SENTRY_DSN"].present?
+      return unless (user = Current.user)
 
-      if Current.user
-        Sentry.set_user(
-          id: Current.user.id,
-          email: Current.user.email,
-          username: Current.user.display_name,
-          ip_address: Current.ip_address
-        )
-      end
+      Sentry.set_user(
+        id: user.id,
+        email: user.email,
+        username: user.display_name,
+        ip_address: Current.ip_address
+      )
+    end
+
+    # Determine when to preload family data
+    def should_preload_family_data?
+      %w[
+        dashboard
+        accounts
+        budgets
+        reports
+        entries
+      ].include?(controller_name)
+    end
+
+    # Eager load family and associations if needed
+    def preload_family_data(user)
+      family = user.association(:family).load_target
+
+      ActiveRecord::Associations::Preloader.new.preload(
+        family,
+        [ :accounts, :categories, :tags ]
+      )
     end
 end
