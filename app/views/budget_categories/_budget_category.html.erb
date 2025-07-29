@@ -9,7 +9,7 @@
       </div>
     <% else %>
       <div class="w-8 h-8 group-hover:scale-105 transition-all duration-300 rounded-full flex justify-center items-center" style="color: <%= budget_category.category.color %>">
-        <% if budget_category.category.lucide_icon %>
+        <% if budget_category.category.lucide_icon.present? %>
           <%= icon(budget_category.category.lucide_icon, color: "current") %>
         <% else %>
           <%= render DS::FilledIcon.new(
