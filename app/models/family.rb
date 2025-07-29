@@ -37,8 +37,7 @@ class Family < ApplicationRecord
   validates :date_format, inclusion: { in: DATE_FORMATS.map(&:last) }
 
   def assigned_merchants
-    merchant_ids = transactions.where.not(merchant_id: nil).pluck(:merchant_id).uniq
-    Merchant.where(id: merchant_ids)
+    Merchant.where(id: transactions.where.not(merchant_id: nil).select(:merchant_id).distinct)
   end
 
   def auto_categorize_transactions_later(transactions)
