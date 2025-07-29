@@ -3,6 +3,115 @@
 class Api::V1::BaseController < ApplicationController
   include Doorkeeper::Rails::Helpers
 
+  # ============================================================================
+  # PARAMETER GROUPS FOR REUSE ACROSS API CONTROLLERS
+  # ============================================================================
+
+  def_param_group :device_info do
+    param :device, Hash, desc: "Device information for OAuth token creation" do
+      param :device_id, String, desc: "Unique device identifier", required: true
+      param :device_name, String, desc: "Name of the device (e.g., 'My iPhone')", required: true
+      param :device_type, String, desc: "Type of device (e.g., 'iOS', 'Android')", required: true
+      param :os_version, String, desc: "Operating system version", required: true
+      param :app_version, String, desc: "Application version", required: true
+    end
+  end
+
+  def_param_group :pagination_params do
+    param :page, String, desc: "Page number for pagination (default: 1)", required: false, example: "1"
+    param :per_page, String, desc: "Number of items per page (max 100, default 25)", required: false, example: "25"
+  end
+
+  def_param_group :date_range_filter do
+    param :start_date, String, desc: "Filter from this date (YYYY-MM-DD)", required: false, example: "2024-01-01"
+    param :end_date, String, desc: "Filter to this date (YYYY-MM-DD)", required: false, example: "2024-12-31"
+  end
+
+  def_param_group :pagination_response do
+    property :pagination, Hash, desc: "Pagination metadata" do
+      property :page, :number, desc: "Current page number", example: 1
+      property :per_page, :number, desc: "Number of items per page", example: 25
+      property :total_count, :number, desc: "Total number of items", example: 150
+      property :total_pages, :number, desc: "Total number of pages", example: 6
+    end
+  end
+
+  def_param_group :user_response do
+    property :user, Hash, desc: "User details" do
+      property :id, String, desc: "User ID", example: "123e4567-e89b-12d3-a456-426614174000"
+      property :email, String, desc: "User email", example: "user@example.com"
+      property :first_name, String, desc: "User first name", example: "John"
+      property :last_name, String, desc: "User last name", example: "Doe"
+    end
+  end
+
+  def_param_group :oauth_token_response do
+    property :access_token, String, desc: "OAuth access token", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    property :refresh_token, String, desc: "OAuth refresh token", example: "def50200abc123..."
+    property :token_type, String, desc: "Token type", example: "Bearer"
+    property :expires_in, Integer, desc: "Access token expiration in seconds", example: 2592000
+    property :created_at, Integer, desc: "Access token creation timestamp", example: 1640995200
+  end
+
+  def_param_group :account_basic do
+    property :id, String, desc: "Account ID", example: "acc_123e4567"
+    property :name, String, desc: "Account name", example: "Chase Checking"
+    property :balance, Float, desc: "Current balance", example: 1250.50
+    property :currency, String, desc: "Currency code", example: "USD"
+    property :classification, String, desc: "Account classification", example: "asset"
+  end
+
+  def_param_group :category_basic do
+    property :id, String, desc: "Category ID", example: "cat_123e4567"
+    property :name, String, desc: "Category name", example: "Groceries"
+  end
+
+  def_param_group :merchant_basic do
+    property :id, String, desc: "Merchant ID", example: "mer_123e4567"
+    property :name, String, desc: "Merchant name", example: "Whole Foods"
+  end
+
+  def_param_group :tag_basic do
+    property :id, String, desc: "Tag ID", example: "tag_123e4567"
+    property :name, String, desc: "Tag name", example: "business"
+  end
+
+  # ============================================================================
+  # COMMON ERROR RESPONSES
+  # ============================================================================
+
+
+
+  # ============================================================================
+  # RESOURCE DESCRIPTION
+  # ============================================================================
+
+  resource_description do
+    short "Base API controller with common functionality"
+    formats [ "json" ]
+    api_version "v1"
+    description <<-EOS
+      Base controller for all Maybe API endpoints.
+
+      == Authentication
+      All endpoints require authentication via:
+      - OAuth2 Bearer token in Authorization header: `Authorization: Bearer <token>`
+      - API Key in X-Api-Key header: `X-Api-Key: <key>`
+
+      == Rate Limiting
+      API key requests are rate limited based on the key's configuration.
+      OAuth requests are not rate limited.
+
+      == Error Handling
+      All endpoints return consistent error responses with appropriate HTTP status codes.
+
+      == Scopes
+      - `read`: Read-only access to user data
+      - `read_write`: Full access to user data (includes read access)
+    EOS
+    meta author: { name: "Maybe Team" }
+  end
+
   # Skip regular session-based authentication for API
   skip_authentication
 

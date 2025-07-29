@@ -71,6 +71,8 @@ gem "rotp", "~> 6.3"
 gem "rqrcode", "~> 3.1.0"
 gem "activerecord-import"
 gem "rubyzip", "~> 2.4.1"
+gem "apipie-rails", "~> 1.4"
+gem "kramdown", "~>  2.5.1"
 
 # State machines
 gem "aasm"

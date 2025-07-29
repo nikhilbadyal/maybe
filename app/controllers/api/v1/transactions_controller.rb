@@ -3,10 +3,155 @@
 class Api::V1::TransactionsController < Api::V1::BaseController
   include Pagy::Backend
 
+  # ============================================================================
+  # PARAMETER GROUPS FOR TRANSACTION FILTERING
+  # ============================================================================
+
+  def_param_group :transaction_filters do
+    param :account_id, String, desc: "Filter by single account ID", required: false, example: "acc_123e4567"
+    param :account_ids, Array, of: String, desc: "Filter by multiple account IDs", required: false, example: [ "acc_123e4567", "acc_789a0123" ]
+    param :category_id, String, desc: "Filter by single category ID", required: false, example: "cat_123e4567"
+    param :category_ids, Array, of: String, desc: "Filter by multiple category IDs", required: false, example: [ "cat_123e4567", "cat_789a0123" ]
+    param :merchant_id, String, desc: "Filter by single merchant ID", required: false, example: "mer_123e4567"
+    param :merchant_ids, Array, of: String, desc: "Filter by multiple merchant IDs", required: false, example: [ "mer_123e4567", "mer_789a0123" ]
+    param_group :date_range_filter, Api::V1::BaseController
+    param :min_amount, :decimal, desc: "Filter transactions >= this amount", required: false, example: 10.50
+    param :max_amount, :decimal, desc: "Filter transactions <= this amount", required: false, example: 1000.00
+    param :tag_ids, Array, of: String, desc: "Filter by tag IDs", required: false, example: [ "tag_123e4567" ]
+    param :type, [ "income", "expense" ], desc: "Filter by transaction type", required: false, example: "expense"
+    param :search, String, desc: "Search in transaction names, notes, or merchant names", required: false, example: "grocery"
+  end
+
+  def_param_group :transaction_create_params do
+    param :transaction, Hash, desc: "Transaction details", required: true do
+      param :account_id, String, desc: "Account ID for the transaction", required: true, example: "acc_123e4567"
+      param :date, String, desc: "Transaction date (YYYY-MM-DD)", required: true, example: "2024-01-15"
+      param :amount, :decimal, desc: "Transaction amount", required: true, example: 25.50
+      param :name, String, desc: "Transaction name/description", required: false, example: "Grocery shopping"
+      param :description, String, desc: "Alternative to name field", required: false, example: "Weekly groceries at Whole Foods"
+      param :notes, String, desc: "Additional notes", required: false, example: "Used cashback credit card"
+      param :currency, String, desc: "Currency code (defaults to family currency)", required: false, example: "USD"
+      param :category_id, String, desc: "Category ID", required: false, example: "cat_123e4567"
+      param :merchant_id, String, desc: "Merchant ID", required: false, example: "mer_123e4567"
+      param :nature, [ "income", "inflow", "expense", "outflow" ], desc: "Transaction nature (affects amount sign)", required: false, example: "expense"
+      param :tag_ids, Array, of: String, desc: "Tag IDs to associate", required: false, example: [ "tag_123e4567" ]
+    end
+  end
+
+  def_param_group :transaction_response do
+    property :id, String, desc: "Transaction ID", example: "txn_123e4567"
+    property :date, Date, desc: "Transaction date", example: "2024-01-15"
+    property :name, String, desc: "Transaction name", example: "Grocery shopping"
+    property :amount, :decimal, desc: "Transaction amount", example: 25.50
+    property :currency, String, desc: "Currency code", example: "USD"
+    property :notes, String, desc: "Additional notes", example: "Used cashback credit card"
+    property :account, Hash, desc: "Associated account" do
+      param_group :account_basic, Api::V1::BaseController
+    end
+    property :category, Hash, desc: "Associated category (if any)" do
+      param_group :category_basic, Api::V1::BaseController
+    end
+    property :merchant, Hash, desc: "Associated merchant (if any)" do
+      param_group :merchant_basic, Api::V1::BaseController
+    end
+    property :tags, Array, of: Hash, desc: "Associated tags" do
+      param_group :tag_basic, Api::V1::BaseController
+    end
+    property :created_at, DateTime, desc: "Creation timestamp", example: "2024-01-15T10:30:00Z"
+    property :updated_at, DateTime, desc: "Last update timestamp", example: "2024-01-20T14:45:00Z"
+  end
+
+  resource_description do
+    short "Manage financial transactions"
+    formats [ "json" ]
+    api_version "v1"
+    tags "transactions", "financial_data"
+    description <<-EOS
+      ## Transaction Management
+
+      Manage all financial transactions including:
+      - **Income**: Money coming into accounts (salary, refunds, etc.)
+      - **Expenses**: Money going out of accounts (purchases, bills, etc.)
+      - **Transfers**: Money moving between your accounts
+
+      ### Transaction Types
+      - `income/inflow`: Positive money flow (amount stored as negative)
+      - `expense/outflow`: Negative money flow (amount stored as positive)
+
+      ### Filtering & Search
+      Filter transactions by date range, amount range, accounts, categories, merchants, tags, or search text.
+
+      ### Pagination
+      All list endpoints support pagination with configurable page size (max 100 items).
+    EOS
+    meta module: "Core API", priority: "high"
+  end
+
   # Ensure proper scope authorization for read vs write access
   before_action :ensure_read_scope, only: [ :index, :show ]
   before_action :ensure_write_scope, only: [ :create, :update, :destroy ]
   before_action :set_transaction, only: [ :show, :update, :destroy ]
+
+  api :GET, "/transactions", "List transactions with filtering and pagination"
+  description <<-EOS
+    Retrieve a paginated list of transactions with comprehensive filtering options.
+    Results are ordered by date (newest first) and include all related data.
+  EOS
+  param_group :pagination_params, Api::V1::BaseController
+  param_group :transaction_filters, Api::V1::TransactionsController
+  tags "transactions", "list", "filtering"
+  returns code: 200, desc: "Successfully retrieved transactions list" do
+    property :transactions, array_of: Hash, desc: "Array of transaction objects" do
+      param_group :transaction_response, Api::V1::TransactionsController
+    end
+    param_group :pagination_response, Api::V1::BaseController
+  end
+  example <<-EOS
+    GET /api/v1/transactions?category_id=cat_groceries&start_date=2024-01-01&end_date=2024-01-31&page=1&per_page=10
+
+    Response:
+    {
+      "transactions": [
+        {
+          "id": "txn_123e4567",
+          "date": "2024-01-15",
+          "name": "Whole Foods Market",
+          "amount": 125.50,
+          "currency": "USD",
+          "notes": "Weekly grocery shopping",
+          "account": {
+            "id": "acc_123e4567",
+            "name": "Chase Checking",
+            "balance": 2500.00,
+            "currency": "USD",
+            "classification": "asset"
+          },
+          "category": {
+            "id": "cat_groceries",
+            "name": "Groceries"
+          },
+          "merchant": {
+            "id": "mer_wholefoods",
+            "name": "Whole Foods Market"
+          },
+          "tags": [
+            {
+              "id": "tag_essential",
+              "name": "Essential"
+            }
+          ],
+          "created_at": "2024-01-15T10:30:00Z",
+          "updated_at": "2024-01-15T10:30:00Z"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "per_page": 10,
+        "total_count": 45,
+        "total_pages": 5
+      }
+    }
+  EOS
 
   def index
     family = current_resource_owner.family
@@ -49,6 +194,49 @@ class Api::V1::TransactionsController < Api::V1::BaseController
     }, status: :internal_server_error
   end
 
+  api :GET, "/transactions/:id", "Retrieve a single transaction"
+  param :id, String, desc: "Transaction ID", required: true, example: "txn_123e4567"
+  tags "transactions", "details"
+  returns code: 200, desc: "Successfully retrieved transaction" do
+    param_group :transaction_response, Api::V1::TransactionsController
+  end
+  returns code: 404, desc: "Transaction not found"
+  example <<-EOS
+    GET /api/v1/transactions/txn_123e4567
+
+    Response:
+    {
+      "id": "txn_123e4567",
+      "date": "2024-01-15",
+      "name": "Whole Foods Market",
+      "amount": 125.50,
+      "currency": "USD",
+      "notes": "Weekly grocery shopping",
+      "account": {
+        "id": "acc_123e4567",
+        "name": "Chase Checking",
+        "balance": 2500.00,
+        "currency": "USD",
+        "classification": "asset"
+      },
+      "category": {
+        "id": "cat_groceries",
+        "name": "Groceries"
+      },
+      "merchant": {
+        "id": "mer_wholefoods",
+        "name": "Whole Foods Market"
+      },
+      "tags": [
+        {
+          "id": "tag_essential",
+          "name": "Essential"
+        }
+      ],
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    }
+  EOS
   def show
     # Rails will automatically use app/views/api/v1/transactions/show.json.jbuilder
     render :show
@@ -63,6 +251,66 @@ class Api::V1::TransactionsController < Api::V1::BaseController
     }, status: :internal_server_error
   end
 
+  api :POST, "/transactions", "Create a new transaction"
+  description <<-EOS
+    Create a new financial transaction. The transaction will be automatically
+    categorized if possible and associated with the specified account.
+  EOS
+  param_group :transaction_create_params, Api::V1::TransactionsController
+  tags "transactions", "create"
+  returns code: 201, desc: "Successfully created transaction" do
+    param_group :transaction_response, Api::V1::TransactionsController
+  end
+  returns code: 422, desc: "Validation failed - invalid transaction data"
+  example <<-EOS
+    Request:
+    {
+      "transaction": {
+        "account_id": "acc_123e4567",
+        "date": "2024-01-15",
+        "amount": 125.50,
+        "name": "Whole Foods Market",
+        "notes": "Weekly grocery shopping",
+        "category_id": "cat_groceries",
+        "merchant_id": "mer_wholefoods",
+        "nature": "expense",
+        "tag_ids": ["tag_essential"]
+      }
+    }
+
+    Response:
+    {
+      "id": "txn_123e4567",
+      "date": "2024-01-15",
+      "name": "Whole Foods Market",
+      "amount": 125.50,
+      "currency": "USD",
+      "notes": "Weekly grocery shopping",
+      "account": {
+        "id": "acc_123e4567",
+        "name": "Chase Checking",
+        "balance": 2374.50,
+        "currency": "USD",
+        "classification": "asset"
+      },
+      "category": {
+        "id": "cat_groceries",
+        "name": "Groceries"
+      },
+      "merchant": {
+        "id": "mer_wholefoods",
+        "name": "Whole Foods Market"
+      },
+      "tags": [
+        {
+          "id": "tag_essential",
+          "name": "Essential"
+        }
+      ],
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    }
+  EOS
   def create
     family = current_resource_owner.family
 
@@ -102,8 +350,29 @@ class Api::V1::TransactionsController < Api::V1::BaseController
       error: "internal_server_error",
       message: "Error: #{e.message}"
     }, status: :internal_server_error
-end
+  end
 
+  api :PUT, "/transactions/:id", "Update an existing transaction"
+  api :PATCH, "/transactions/:id", "Update an existing transaction"
+  param :id, String, desc: "Transaction ID to update", required: true, example: "txn_123e4567"
+  param :transaction, Hash, desc: "Transaction fields to update" do
+    param :date, String, desc: "New transaction date", required: false, example: "2024-01-16"
+    param :amount, :decimal, desc: "New transaction amount", required: false, example: 150.00
+    param :name, String, desc: "New transaction name", required: false, example: "Updated name"
+    param :description, String, desc: "New description", required: false, example: "Updated description"
+    param :notes, String, desc: "New notes", required: false, example: "Updated notes"
+    param :currency, String, desc: "New currency", required: false, example: "EUR"
+    param :category_id, String, desc: "New category ID", required: false, example: "cat_456e7890"
+    param :merchant_id, String, desc: "New merchant ID", required: false, example: "mer_456e7890"
+    param :nature, [ "income", "inflow", "expense", "outflow" ], desc: "New transaction nature", required: false, example: "income"
+    param :tag_ids, Array, of: String, desc: "New tag IDs", required: false, example: [ "tag_456e7890" ]
+  end
+  tags "transactions", "update"
+  returns code: 200, desc: "Successfully updated transaction" do
+    param_group :transaction_response, Api::V1::TransactionsController
+  end
+  returns code: 404, desc: "Transaction not found"
+  returns code: 422, desc: "Validation failed - invalid update data"
   def update
     if @entry.update(entry_params_for_update)
       @entry.sync_account_later
@@ -130,6 +399,19 @@ end
     }, status: :internal_server_error
   end
 
+  api :DELETE, "/transactions/:id", "Delete a transaction"
+  param :id, String, desc: "Transaction ID to delete", required: true, example: "txn_123e4567"
+  tags "transactions", "delete"
+  returns code: 200, desc: "Successfully deleted transaction"
+  returns code: 404, desc: "Transaction not found"
+  example <<-EOS
+    DELETE /api/v1/transactions/txn_123e4567
+
+    Response:
+    {
+      "message": "Transaction deleted successfully"
+    }
+  EOS
   def destroy
     @entry.destroy!
     @entry.sync_account_later
@@ -248,7 +530,7 @@ end
              "entries.name ILIKE ? OR entries.notes ILIKE ? OR merchants.name ILIKE ?",
              search_term, search_term, search_term
            )
-end
+    end
 
     def transaction_params
       params.require(:transaction).permit(
