@@ -30,6 +30,10 @@ class ChatsTest < ApplicationSystemTestCase
   test "sidebar shows last viewed chat" do
     @user.update!(ai_enabled: true)
 
+    # First navigate to chats index to see the chat list
+    find("#chat-nav-back").click
+
+    # Click on the first chat
     click_on @user.chats.first.title
 
     # Page refresh
@@ -62,5 +66,49 @@ class ChatsTest < ApplicationSystemTestCase
     click_on @user.chats.reload.first.title
 
     assert_text "Can you help with my finances?"
+  end
+
+  test "sidebar is hidden when OpenAI token is missing in self-hosted mode" do
+    with_self_hosting do
+      with_env_overrides("OPENAI_ACCESS_TOKEN" => nil) do
+        visit root_path
+
+        # Sidebar should not be present
+        assert_no_selector "#chat-container"
+
+        # Mobile navigation should not include assistant link
+        assert_no_link "Assistant"
+
+        # Panel right button should not be present
+        assert_no_selector "[data-action='app-layout#toggleRightSidebar']"
+      end
+    end
+  end
+
+  test "sidebar is shown when OpenAI token is present in self-hosted mode" do
+    with_self_hosting do
+      with_env_overrides("OPENAI_ACCESS_TOKEN" => "test-token") do
+        visit root_path
+
+        # Sidebar should be present
+        assert_selector "#chat-container"
+
+        # Panel right button should be present
+        assert_selector "[data-action='app-layout#toggleRightSidebar']"
+      end
+    end
+  end
+
+  test "sidebar is shown in managed mode regardless of OpenAI token" do
+    # Test managed mode (default mode) - should show sidebar even without OpenAI token
+    with_env_overrides("OPENAI_ACCESS_TOKEN" => nil) do
+      visit root_path
+
+      # Sidebar should still be present in managed mode
+      assert_selector "#chat-container"
+
+      # Panel right button should be present
+      assert_selector "[data-action='app-layout#toggleRightSidebar']"
+    end
   end
 end

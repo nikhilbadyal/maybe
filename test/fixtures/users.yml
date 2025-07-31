@@ -27,6 +27,7 @@ family_admin:
   role: admin
   onboarded_at: <%= 3.days.ago %>
   ai_enabled: true
+  last_viewed_chat: one
 
 family_member:
   family: dylan_family

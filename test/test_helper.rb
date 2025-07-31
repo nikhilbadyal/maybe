@@ -14,6 +14,9 @@ ENV["PLAID_ENV"] = "sandbox"
 ENV["PLAID_CLIENT_ID"] ||= "test_client_id"
 ENV["PLAID_SECRET"] ||= "test_secret"
 
+# Set OpenAI token for assistant tests
+ENV["OPENAI_ACCESS_TOKEN"] ||= "test_openai_token"
+
 # Fixes Segfaults on M1 Macs when running tests in parallel (temporary workaround)
 ENV["PGGSSENCMODE"] = "disable"
 
