@@ -77,6 +77,8 @@ services:
       <<: *rails_env
     env_file:
       - .env.docker
+    volumes:
+      - app-storage:/rails/storage
     networks:
       - maybe_net
 

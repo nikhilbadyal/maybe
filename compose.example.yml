@@ -69,6 +69,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    volumes:
+      - app-storage:/rails/storage
     environment:
       <<: *rails_env
     networks:
