@@ -138,4 +138,32 @@ class UserTest < ActiveSupport::TestCase
     assert_match %r{secret=#{user.otp_secret}}, user.provisioning_uri
     assert_match %r{issuer=Maybe}, user.provisioning_uri
   end
+
+  # balance_sheet_sort validation tests
+  test "balance_sheet_sort accepts valid sort options" do
+    %w[name_asc name_desc balance_asc balance_desc].each do |sort_option|
+      @user.balance_sheet_sort = sort_option
+      assert @user.valid?, "Should accept #{sort_option} as valid sort option"
+    end
+  end
+
+  test "balance_sheet_sort rejects invalid sort options" do
+    %w[invalid_sort random_option name_ascending balance_high].each do |invalid_option|
+      @user.balance_sheet_sort = invalid_option
+      assert_not @user.valid?, "Should reject #{invalid_option} as invalid sort option"
+      assert_includes @user.errors[:balance_sheet_sort], "is not included in the list"
+    end
+  end
+
+  test "balance_sheet_sort defaults to name_asc for new users" do
+    new_user = User.new(
+      email: "test@example.com",
+      password: "password",
+      first_name: "Test",
+      last_name: "User",
+      family: families(:empty)
+    )
+
+    assert_equal "name_asc", new_user.balance_sheet_sort
+  end
 end

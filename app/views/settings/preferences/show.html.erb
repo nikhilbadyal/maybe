@@ -34,6 +34,14 @@
             country_options,
             { label: t(".country") },
             { data: { auto_submit_form_target: "auto" } } %>
+      <% end %>
+
+      <%= form.select :balance_sheet_sort,
+          BalanceSheet::Sorter.available_options,
+          { label: t(".balance_sheet_sort_order") },
+          { data: { auto_submit_form_target: "auto" } } %>
+
+      <%= form.fields_for :family do |family_form| %>
 
         <p class="text-xs italic pl-2 text-secondary">Please note, we are still working on translations for various languages.  Please see the <%= link_to "I18n issue", "https://github.com/maybe-finance/maybe/issues/1225", target: "_blank", class: "underline" %> for more information.</p>
       <% end %>
