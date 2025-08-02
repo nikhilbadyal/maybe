@@ -130,4 +130,62 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_not User.find(@admin.id).active?
     assert_enqueued_with(job: UserPurgeJob, args: [ @admin ])
   end
+
+  test "can update balance_sheet_sort preference" do
+    assert_equal "name_asc", @user.balance_sheet_sort, "Should start with default sort"
+
+    patch user_url(@user), params: {
+      user: {
+        balance_sheet_sort: "balance_desc"
+      }
+    }
+
+    assert_redirected_to settings_profile_url
+    assert_equal "balance_desc", @user.reload.balance_sheet_sort, "Should update sort preference"
+  end
+
+  test "rejects invalid balance_sheet_sort preference" do
+    original_sort = @user.balance_sheet_sort
+
+    patch user_url(@user), params: {
+      user: {
+        balance_sheet_sort: "invalid_sort"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_equal original_sort, @user.reload.balance_sheet_sort, "Should not change sort preference"
+  end
+
+  test "can update balance_sheet_sort along with other user attributes" do
+    patch user_url(@user), params: {
+      user: {
+        first_name: "Updated",
+        balance_sheet_sort: "name_desc",
+        family_attributes: {
+          id: @user.family.id,
+          name: "Updated Family"
+        }
+      }
+    }
+
+    assert_redirected_to settings_profile_url
+
+    updated_user = @user.reload
+    assert_equal "Updated", updated_user.first_name
+    assert_equal "name_desc", updated_user.balance_sheet_sort
+    assert_equal "Updated Family", updated_user.family.name
+  end
+
+  test "balance_sheet_sort preference is included in permitted parameters" do
+    # This test ensures the parameter is whitelisted and won't be filtered out
+    patch user_url(@user), params: {
+      user: {
+        balance_sheet_sort: "balance_asc"
+      }
+    }
+
+    assert_response :redirect
+    assert_equal "balance_asc", @user.reload.balance_sheet_sort
+  end
 end

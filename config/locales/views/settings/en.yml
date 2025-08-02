@@ -1,5 +1,10 @@
 ---
 en:
+  balance_sheet_sorter:
+    name_asc: "Account Name (A-Z)"
+    name_desc: "Account Name (Z-A)"
+    balance_asc: "Balance (Low-High)"
+    balance_desc: "Balance (High-Low)"
   settings:
     billings:
       show:
@@ -26,6 +31,7 @@ en:
         timezone: Timezone
         use_data_provider: Use Data Provider
         use_data_provider_description: When enabled, Maybe will fetch historical exchange rates, security prices, and other data to calculate accurate historical account balances. Disable this if you prefer to manage data manually.
+        balance_sheet_sort_order: Balance Sheet Sort Order
     profiles:
       destroy:
         cannot_remove_self: You cannot remove yourself from the account.

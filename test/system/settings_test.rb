@@ -76,6 +76,71 @@ class SettingsTest < ApplicationSystemTestCase
     assert_no_selector "li", text: I18n.t("settings.settings_nav.billing_label")
   end
 
+  test "can update balance sheet sort preference" do
+    open_settings_from_sidebar
+    click_link "Preferences"
+
+    assert_text "Balance Sheet Sort Order"
+
+    # Should show the current selection
+    assert_selector "select[name='user[balance_sheet_sort]']"
+
+    # Change to balance descending
+    select "Balance (High-Low)", from: "user[balance_sheet_sort]"
+
+    # Wait for auto-submit form to complete
+    assert_text "Balance Sheet Sort Order"
+
+    # Verify the preference was saved
+    assert_equal "balance_desc", @user.reload.balance_sheet_sort
+  end
+
+  test "displays all balance sheet sort options" do
+    open_settings_from_sidebar
+    click_link "Preferences"
+
+    within "select[name='user[balance_sheet_sort]']" do
+      assert_text "Account Name (A-Z)"
+      assert_text "Account Name (Z-A)"
+      assert_text "Balance (Low-High)"
+      assert_text "Balance (High-Low)"
+    end
+  end
+
+  test "balance sheet sort preference persists across sessions" do
+    # Update preference
+    @user.update!(balance_sheet_sort: "name_desc")
+
+    open_settings_from_sidebar
+    click_link "Preferences"
+
+    # Should show the saved preference
+    assert_equal "name_desc", find("select[name='user[balance_sheet_sort]']").value
+  end
+
+  test "can change balance sheet sort preference and it persists" do
+    # Start with default preference
+    assert_equal "name_asc", @user.balance_sheet_sort
+
+    open_settings_from_sidebar
+    click_link "Preferences"
+
+    # Change to balance descending
+    select "Balance (High-Low)", from: "user[balance_sheet_sort]"
+
+    # Wait for auto-submit to complete
+    sleep 1
+
+    # Verify the preference was updated in the database
+    assert_equal "balance_desc", @user.reload.balance_sheet_sort
+
+    # Refresh the page and verify the selection persists
+    refresh
+
+    # Should show the updated preference
+    assert_equal "balance_desc", find("select[name='user[balance_sheet_sort]']").value
+  end
+
   private
 
     def open_settings_from_sidebar

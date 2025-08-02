@@ -1,7 +1,8 @@
 class BalanceSheet::AccountTotals
-  def initialize(family, sync_status_monitor:)
+  def initialize(family, sync_status_monitor:, sort_by: nil)
     @family = family
     @sync_status_monitor = sync_status_monitor
+    @sort_by = sort_by || (Current.user&.balance_sheet_sort || BalanceSheet::Sorter::DEFAULT_SORT)
   end
 
   def asset_accounts
@@ -13,7 +14,7 @@ class BalanceSheet::AccountTotals
   end
 
   private
-    attr_reader :family, :sync_status_monitor
+    attr_reader :family, :sync_status_monitor, :sort_by
 
     AccountRow = Data.define(:account, :converted_balance, :is_syncing) do
       def syncing? = is_syncing
@@ -39,7 +40,7 @@ class BalanceSheet::AccountTotals
 
     def cache_key
       family.build_cache_key(
-        "balance_sheet_account_rows",
+        "balance_sheet_account_rows_#{sort_by}",
         invalidate_on_data_updates: true
       )
     end
@@ -57,7 +58,7 @@ class BalanceSheet::AccountTotals
             "SUM(accounts.balance * COALESCE(exchange_rates.rate, 1)) as converted_balance"
           )
           .group(:classification, :accountable_type, :id)
-          .order("accounts.name ASC") # Sort by account name
+          .order(BalanceSheet::Sorter.for(sort_by).order_clause)
           .to_a
       end
     end
