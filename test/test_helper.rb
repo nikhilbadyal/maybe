@@ -21,6 +21,7 @@ ENV["OPENAI_ACCESS_TOKEN"] ||= "test_openai_token"
 ENV["PGGSSENCMODE"] = "disable"
 
 require "rails/test_help"
+require "rails-controller-testing"
 require "minitest/mock"
 require "minitest/autorun"
 require "mocha/minitest"

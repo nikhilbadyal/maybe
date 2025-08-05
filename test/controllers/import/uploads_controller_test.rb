@@ -11,6 +11,26 @@ class Import::UploadsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show sorts accounts by name" do
+    @user.update!(balance_sheet_sort: "name_asc")
+
+    get import_upload_url(@import)
+
+    sorted_accounts = assigns(:sorted_accounts)
+    expected_order = @user.family.accounts.visible.order(name: :asc).pluck(:name)
+    assert_equal expected_order, sorted_accounts.pluck(:name)
+  end
+
+  test "show sorts accounts by balance" do
+    @user.update!(balance_sheet_sort: "balance_desc")
+
+    get import_upload_url(@import)
+
+    sorted_accounts = assigns(:sorted_accounts)
+    expected_order = @user.family.accounts.visible.order(balance: :desc).pluck(:name)
+    assert_equal expected_order, sorted_accounts.pluck(:name)
+  end
+
   test "uploads valid csv by copy and pasting" do
     patch import_upload_url(@import), params: {
       import: {

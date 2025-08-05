@@ -190,4 +190,26 @@ class ImportsTest < ApplicationSystemTestCase
 
     click_on "Back to dashboard"
   end
+
+  test "sorts accounts by name in dropdown" do
+    @user.update!(balance_sheet_sort: "name_asc")
+    visit new_import_path
+    click_on "Import transactions"
+
+    expected_order = @user.family.accounts.visible.order(name: :asc).pluck(:name)
+    options = find("#import_account_id").all("option").map(&:text)
+    # The first option is "Multi-account import"
+    assert_equal expected_order, options[1..]
+  end
+
+  test "sorts accounts by balance in dropdown" do
+    @user.update!(balance_sheet_sort: "balance_desc")
+    visit new_import_path
+    click_on "Import transactions"
+
+    expected_order = @user.family.accounts.visible.order(balance: :desc).pluck(:name)
+    options = find("#import_account_id").all("option").map(&:text)
+    # The first option is "Multi-account import"
+    assert_equal expected_order, options[1..]
+  end
 end
