@@ -4,6 +4,7 @@ class Import::UploadsController < ApplicationController
   before_action :set_import
 
   def show
+    @sorted_accounts = sorted_accounts
   end
 
   def sample_csv
@@ -21,6 +22,7 @@ class Import::UploadsController < ApplicationController
 
       redirect_to import_configuration_path(@import, template_hint: true), notice: "CSV uploaded successfully."
     else
+      @sorted_accounts = sorted_accounts
       flash.now[:alert] = "Must be valid CSV with headers and at least one row of data"
 
       render :show, status: :unprocessable_entity
@@ -49,5 +51,16 @@ class Import::UploadsController < ApplicationController
 
     def upload_params
       params.require(:import).permit(:raw_file_str, :csv_file, :col_sep)
+    end
+
+    def sorted_accounts
+      sort_by = Current.user&.balance_sheet_sort || BalanceSheet::Sorter::DEFAULT_SORT
+      order_clause = if sort_by.start_with?("balance_")
+        direction = sort_by.end_with?("_asc") ? :asc : :desc
+        { balance: direction }
+      else
+        Arel.sql(BalanceSheet::Sorter.for(sort_by).order_clause)
+      end
+      @import.family.accounts.visible.order(order_clause)
     end
 end
