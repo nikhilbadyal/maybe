@@ -65,16 +65,7 @@ class ValuationsController < ApplicationController
 
       respond_to do |format|
         format.html { redirect_back_or_to account_path(@entry.account), notice: "Entry updated" }
-        format.turbo_stream do
-          render turbo_stream: [
-            turbo_stream.replace(
-              dom_id(@entry, :header),
-              partial: "valuations/header",
-              locals: { entry: @entry }
-            ),
-            turbo_stream.replace(@entry)
-          ]
-        end
+        format.turbo_stream { stream_redirect_back_or_to(account_path(@entry.account), notice: "Entry updated") }
       end
     else
       @error_message = result.error_message
