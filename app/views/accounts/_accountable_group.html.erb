@@ -21,34 +21,20 @@
       </div>
     <% end %>
 
-    <div class="space-y-1">
-      <% account_group.accounts.each do |account| %>
-        <%= link_to account_path(account),
-                  class: class_names(
-                    "block flex items-center gap-2 px-3 py-2 rounded-lg",
-                    page_active?(account_path(account)) ? "bg-container" : "hover:bg-surface-hover"
-                  ),
-                  title: account.name do %>
-          <%= render "accounts/logo", account: account, size: "sm", color: account_group.color %>
+    <% groups = account_group.grouped_accounts %>
 
-          <div class="min-w-0 grow">
-            <div class="flex items-center gap-2 mb-0.5">
-              <%= tag.p account.name, class: class_names("text-sm text-primary font-medium truncate", "animate-pulse" => account.syncing?) %>
-            </div>
-            <%= tag.p account.short_subtype_label, class: "text-sm text-secondary truncate" %>
-          </div>
-
-          <div class="ml-auto text-right grow h-10">
-            <%= tag.p format_money(account.balance_money), class: "text-sm font-medium text-primary whitespace-nowrap" %>
-            <%= turbo_frame_tag dom_id(account, :sparkline), src: sparkline_account_path(account), loading: "lazy", data: { controller: "turbo-frame-timeout", turbo_frame_timeout_timeout_value: 10000 } do %>
-              <div class="flex items-center w-8 h-4 ml-auto">
-                <div class="w-6 h-px bg-loader"></div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
+    <% groups.each do |subtype, subtype_accounts| %>
+      <% if subtype.present? %>
+        <div class="px-3 pt-2 text-xs font-medium text-secondary">
+          <%= Depository.short_subtype_label_for(subtype) %>
+        </div>
       <% end %>
-    </div>
+      <div class="space-y-1">
+        <% subtype_accounts.each do |account| %>
+          <%= render "accounts/account_row", account: account, account_group: account_group, mobile: mobile %>
+        <% end %>
+      </div>
+    <% end %>
 
     <div class="my-2">
       <%= render DS::Link.new(

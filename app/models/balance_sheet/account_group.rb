@@ -56,6 +56,21 @@ class BalanceSheet::AccountGroup
     classification_group.currency
   end
 
+  # Returns an array of [subtype, accounts] pairs suitable for rendering.
+  # For depository (Cash), groups by subtype and sorts deterministically with
+  # nil/unknown subtypes at the end. Unknown subtypes (not defined in
+  # Depository::SUBTYPES) are grouped under nil. For other groups, returns a
+  # single bucket.
+  def grouped_accounts
+    if key == "depository"
+      accounts
+        .group_by { |account| account.subtype if Depository.short_subtype_label_for(account.subtype) }
+        .sort_by { |subtype, _| [ subtype.nil? ? 1 : 0, Depository.short_subtype_label_for(subtype).to_s ] }
+    else
+      [ [ nil, accounts ] ]
+    end
+  end
+
   private
     attr_reader :classification_group
 end
