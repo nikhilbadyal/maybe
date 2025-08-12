@@ -60,6 +60,13 @@ class Family < ApplicationRecord
     @balance_sheet ||= BalanceSheet.new(self)
   end
 
+  # Resets memoized balance sheet instance. Useful in long-lived objects or tests
+  # where new accounts are created and the aggregation needs to be recomputed.
+  def reset_balance_sheet!
+    remove_instance_variable(:@balance_sheet) if instance_variable_defined?(:@balance_sheet)
+    self
+  end
+
   def income_statement
     @income_statement ||= IncomeStatement.new(self)
   end
