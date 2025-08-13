@@ -35,6 +35,24 @@ class ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to import_upload_url(Import.all.ordered.first)
   end
 
+  test "creates import with preselected account" do
+    account = accounts(:depository)
+
+    assert_difference "Import.count", 1 do
+      post imports_url, params: {
+        import: {
+          type: "TransactionImport",
+          account_id: account.id
+        }
+      }
+    end
+
+    created = Import.all.ordered.first
+    assert_redirected_to import_upload_url(created)
+    assert_equal account, created.account
+    assert_equal "TransactionImport", created.type
+  end
+
   test "publishes import" do
     import = imports(:transaction)
 
