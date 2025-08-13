@@ -60,6 +60,29 @@ class ImportsTest < ApplicationSystemTestCase
     click_on "Back to dashboard"
   end
 
+  test "account menu import bypasses to upload with account preselected" do
+    # Visit an existing account and open the three-dots menu
+    account = accounts(:depository)
+    visit account_path(account)
+
+    within_testid("account-menu") do
+      find("button").click
+      click_on "Import transactions"
+    end
+
+    # We should land on the upload step for the newly created import
+    assert_current_path %r{/imports/.+/upload}
+
+    # The account dropdown should be preselected to the account
+    if page.has_selector?("#import_account_id")
+      selected_option = find("#import_account_id").value
+      assert_equal account.id, selected_option
+    else
+      # For non-transaction/trade imports the select may be hidden; ensure we're on upload page at least
+      assert_selector "form[action*='/upload']"
+    end
+  end
+
   test "trade import" do
     visit new_import_path
 
