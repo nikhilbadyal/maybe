@@ -35,7 +35,7 @@
       <div>
         <%= button_to invite_codes_path,
                         method: :post,
-                        class: "flex gap-1 bg-gray-50 text-primary text-sm rounded-lg px-3 py-2" do %>
+                        class: "flex gap-1 button-bg-secondary hover:button-bg-secondary-hover text-primary text-sm rounded-lg px-3 py-2 transition-colors" do %>
           <span><%= t(".generate_tokens") %></span>
         <% end %>
       </div>
