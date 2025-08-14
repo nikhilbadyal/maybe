@@ -55,23 +55,13 @@ class PagesController < ApplicationController
   def download_net_worth_data
     @balance_sheet = Current.family.balance_sheet
 
-    # Parse period from key, fallback to last_30_days if invalid or missing
-    period = if params[:period].present?
-      begin
-        Period.from_key(params[:period])
-      rescue Period::InvalidKeyError
-        Period.last_30_days
-      end
-    else
-      Period.last_30_days
-    end
-
-    series = @balance_sheet.net_worth_series(period: period)
+    # Use @period from Periodable to avoid duplication
+    series = @balance_sheet.net_worth_series(period: @period)
 
     respond_to do |format|
       format.csv do
-        csv_data = generate_net_worth_csv(series, period)
-        filename = "net_worth_data_#{period.start_date}_to_#{period.end_date}.csv"
+        csv_data = generate_net_worth_csv(series, @period)
+        filename = "net_worth_data_#{@period.start_date}_to_#{@period.end_date}.csv"
         send_data csv_data, filename: filename, type: "text/csv"
       end
     end
