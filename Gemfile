@@ -6,7 +6,7 @@ ruby file: ".ruby-version"
 gem "rails", "~> 7.2.2"
 
 # Drivers
-gem "pg", "~> 1.5.9"
+gem "pg", "~> 1.6.1"
 gem "redis", "~> 5.4.1"
 
 # Deployment
@@ -42,7 +42,7 @@ gem "logtail-rails"
 gem "skylight", groups: [ :production ]
 
 # Active Storage
-gem "aws-sdk-s3", "~> 1.194.0", require: false
+gem "aws-sdk-s3", "~> 1.196.1", require: false
 gem "image_processing", ">= 1.2"
 
 # Other
@@ -70,7 +70,7 @@ gem "plaid"
 gem "rotp", "~> 6.3"
 gem "rqrcode", "~> 3.1.0"
 gem "activerecord-import"
-gem "rubyzip", "~> 2.4.1"
+gem "rubyzip", "~> 3.0.1"
 gem "apipie-rails", "~> 1.4"
 gem "kramdown", "~>  2.5.1"
 
