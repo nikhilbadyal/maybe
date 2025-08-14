@@ -78,7 +78,7 @@ class Period
     end
 
     def custom(start_date:, end_date:)
-      new(start_date: start_date, end_date: end_date)
+      new(key: "custom", start_date: start_date, end_date: end_date)
     end
 
     def all

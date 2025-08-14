@@ -21,22 +21,66 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <% if series.any? %>
-        <%= render DS::Link.new(
-          text: "CSV",
-          href: download_net_worth_data_path(format: :csv, period: period.key),
-          icon: "download",
-          variant: :outline
-        ) %>
-      <% end %>
+    <div class="flex items-center gap-2 ml-auto">
 
-    <%= form_with url: root_path, method: :get, data: { controller: "auto-submit-form" } do |form| %>
-      <%= form.select :period,
-                    Period.as_options,
-                    { selected: period.key },
-                    data: { "auto-submit-form-target": "auto" },
-                    class: "bg-container border border-secondary font-medium rounded-lg px-3 py-2 text-sm pr-7 cursor-pointer text-primary focus:outline-hidden focus:ring-0" %>
+    <%= render DS::Menu.new(variant: "button", no_padding: true) do |menu| %>
+      <% menu.with_button(
+        id: "net-worth-period-menu-btn",
+        type: "button",
+        text: period.label_short,
+        variant: "outline",
+        icon: "calendar"
+      ) %>
+
+      <% menu.with_custom_content do %>
+        <div class="p-3 w-[min(92vw,440px)]">
+          <%= form_with url: root_path, method: :get, data: { controller: "period-selector" } do |form| %>
+            <%= form.select :period,
+                          (Period.as_options + [["Custom", "custom"]]),
+                          { selected: period.key },
+                          data: { action: "change->period-selector#toggleDateInputs", "period-selector-target": "select" },
+                          class: "bg-container border border-secondary font-medium rounded-lg px-3 py-2 text-sm pr-7 cursor-pointer text-primary focus:outline-hidden focus:ring-0 w-full" %>
+
+            <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-2 <%= 'hidden' unless period.key == 'custom' %>" data-period-selector-target="customDateInputs">
+              <% common_input_classes = "bg-container border border-secondary font-medium rounded-lg px-3 py-2 text-sm text-primary focus:outline-hidden focus:ring-0 w-full sm:flex-1" %>
+              <% is_custom = period.key == 'custom' %>
+              <% start_date_value = is_custom ? period.start_date : nil %>
+              <% end_date_value = is_custom ? period.end_date : nil %>
+
+              <%= date_field_tag (is_custom ? :start_date : nil),
+                                  start_date_value,
+                                  placeholder: "Start date",
+                                  aria: { label: "Start date" },
+                                  max: Date.current,
+                                  disabled: !is_custom,
+                                  data: { "period-selector-target": "startDate" },
+                                  class: common_input_classes %>
+              <span class="text-secondary text-sm text-center sm:text-left">to</span>
+              <%= date_field_tag (is_custom ? :end_date : nil),
+                                  end_date_value,
+                                  placeholder: "End date",
+                                  aria: { label: "End date" },
+                                  max: Date.current,
+                                  disabled: !is_custom,
+                                  data: { "period-selector-target": "endDate" },
+                                  class: common_input_classes %>
+              <button type="button" data-action="click->period-selector#submitForm" class="bg-container border border-secondary rounded-lg px-3 py-2 text-sm font-medium text-primary w-full sm:w-full md:w-auto">Apply</button>
+            </div>
+          <% end %>
+
+          <% if series.any? %>
+            <div class="mt-3">
+              <%= render DS::Link.new(
+                text: "Download CSV",
+                href: download_net_worth_data_path(download_net_worth_data_link_params(period)),
+                icon: "download",
+                variant: :outline,
+                class: "w-full justify-center"
+              ) %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     <% end %>
   </div>
   </div>
