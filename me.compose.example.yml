@@ -45,8 +45,6 @@ services:
       # Optional: ensure correct locale/encoding
       LANG: en_US.utf8
       LC_ALL: en_US.utf8
-    ports:
-      - "6542:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -131,6 +129,19 @@ services:
     restart: unless-stopped
     depends_on:
       - web
+    env_file:
+      - .env.docker
+    networks:
+      - maybe_net
+
+  cloudflared-postgres:
+    image: cloudflare/cloudflared:latest
+    container_name: maybe-cloudflared-postgres
+    command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      - postgres
     env_file:
       - .env.docker
     networks:
