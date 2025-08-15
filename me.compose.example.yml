@@ -1,31 +1,6 @@
 # ===========================================================================
-# Example Docker Compose file
+# DRY Docker Compose for Maybe
 # ===========================================================================
-#
-# Purpose:
-# --------
-#
-# This file is an example Docker Compose configuration for self hosting
-# Maybe on your local machine or on a cloud VPS.
-#
-# The configuration below is a "standard" setup that works out of the box,
-# but if you're running this outside of a local network, it is recommended
-# to set the environment variables for extra security.
-#
-# Setup:
-# ------
-#
-# To run this, you should read the setup guide:
-#
-# https://github.com/maybe-finance/maybe/blob/main/docs/hosting/docker.md
-#
-# Troubleshooting:
-# ----------------
-#
-# If you run into problems, you should open a Discussion here:
-#
-# https://github.com/maybe-finance/maybe/discussions/categories/general
-#
 
 x-rails-env: &rails_env
   RAILS_FORCE_SSL: "true"
@@ -33,16 +8,27 @@ x-rails-env: &rails_env
   REDIS_URL: redis://redis:6379/1
   OPENAI_ACCESS_TOKEN: ${OPENAI_ACCESS_TOKEN}
 
+x-common: &common
+  restart: unless-stopped
+  networks:
+    - maybe_net
+  env_file:
+    - .env.docker
+
+x-cloudflared: &cloudflared
+  image: cloudflare/cloudflared:latest
+  pull_policy: always
+  <<: *common
+
 services:
   postgres:
     image: postgres:17-alpine
     container_name: maybe-postgres
-    restart: unless-stopped
+    <<: *common
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # Optional: ensure correct locale/encoding
       LANG: en_US.utf8
       LC_ALL: en_US.utf8
     volumes:
@@ -52,40 +38,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - maybe_net
+
   web:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
+    <<: *common
     volumes:
       - app-storage:/rails/storage
     ports:
       - "80:80"
-    restart: unless-stopped
     environment:
       <<: *rails_env
-    env_file:
-      - .env.docker
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/sessions/new" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    networks:
-      - maybe_net
 
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-worker
+    <<: *common
     command: bundle exec sidekiq
-    restart: unless-stopped
+    volumes:
+      - app-storage:/rails/storage
+    environment:
+      <<: *rails_env
     healthcheck:
       test: ["CMD-SHELL", "bundle exec ruby -e \"require 'sidekiq'; require 'sidekiq/api'; ok = false; begin; pong = Sidekiq.redis { |c| c.ping } == 'PONG'; q = Sidekiq::Queue.new('default'); ok = pong && q.latency < 60; rescue => e; ok = false; end; exit(ok ? 0 : 1)\""]
       interval: 30s
@@ -97,20 +81,12 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    environment:
-      <<: *rails_env
-    env_file:
-      - .env.docker
-    volumes:
-      - app-storage:/rails/storage
-    networks:
-      - maybe_net
 
   redis:
     image: redis:latest
-    restart: unless-stopped
-    pull_policy: always
     container_name: maybe-redis
+    <<: *common
+    pull_policy: always
     volumes:
       - redis-data:/data
     healthcheck:
@@ -118,34 +94,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - maybe_net
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    <<: *cloudflared
     container_name: maybe-cloudflared
     command: tunnel run --token ${CLOUDFLARED_TOKEN}
-    pull_policy: always
-    restart: unless-stopped
     depends_on:
       - web
-    env_file:
-      - .env.docker
-    networks:
-      - maybe_net
 
   cloudflared-postgres:
-    image: cloudflare/cloudflared:latest
+    <<: *cloudflared
     container_name: maybe-cloudflared-postgres
     command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN}
-    pull_policy: always
-    restart: unless-stopped
     depends_on:
       - postgres
-    env_file:
-      - .env.docker
-    networks:
-      - maybe_net
 
 volumes:
   app-storage:
