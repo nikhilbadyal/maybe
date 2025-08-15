@@ -124,9 +124,15 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: maybe-cloudflared
-    command: tunnel run --token ${CLOUDFLARED_TOKEN}
+    command: tunnel run --token ${CLOUDFLARED_TOKEN} --metrics 0.0.0.0:2000
     pull_policy: always
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "cloudflared", "tunnel", "--metrics", "0.0.0.0:2000", "ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     depends_on:
       - web
     env_file:
@@ -137,9 +143,15 @@ services:
   cloudflared-postgres:
     image: cloudflare/cloudflared:latest
     container_name: maybe-cloudflared-postgres
-    command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN}
+    command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN} --metrics 0.0.0.0:2000
     pull_policy: always
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "cloudflared", "tunnel", "--metrics", "0.0.0.0:2000", "ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     depends_on:
       - postgres
     env_file:
