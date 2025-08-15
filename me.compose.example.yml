@@ -34,6 +34,28 @@ x-rails-env: &rails_env
   OPENAI_ACCESS_TOKEN: ${OPENAI_ACCESS_TOKEN}
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: maybe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Optional: ensure correct locale/encoding
+      LANG: en_US.utf8
+      LC_ALL: en_US.utf8
+    ports:
+      - "6542:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - maybe_net
   web:
     build:
       context: .
@@ -59,6 +81,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - maybe_net
 
@@ -72,6 +96,8 @@ services:
     restart: unless-stopped
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     environment:
       <<: *rails_env
@@ -112,6 +138,7 @@ services:
 
 volumes:
   app-storage:
+  postgres-data:
   redis-data:
   ngrok-data:
 
