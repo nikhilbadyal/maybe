@@ -88,6 +88,12 @@ services:
     container_name: maybe-worker
     command: bundle exec sidekiq
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bundle exec ruby -e \"require 'sidekiq'; require 'sidekiq/api'; ok = false; begin; pong = Sidekiq.redis { |c| c.ping } == 'PONG'; q = Sidekiq::Queue.new('default'); ok = pong && q.latency < 60; rescue => e; ok = false; end; exit(ok ? 0 : 1)\""]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
     depends_on:
       redis:
         condition: service_healthy
