@@ -57,10 +57,7 @@ services:
     networks:
       - maybe_net
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: maybe
+    image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
     volumes:
       - app-storage:/rails/storage
@@ -87,10 +84,7 @@ services:
       - maybe_net
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: maybe-worker
+    image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-worker
     command: bundle exec sidekiq
     restart: unless-stopped
