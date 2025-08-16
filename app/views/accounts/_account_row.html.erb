@@ -1,4 +1,4 @@
-<%# locals: (account:, account_group:, mobile: false) %>
+<%# locals: (account:, account_group:, mobile: false, show_subtype_label: true) %>
 
 <%= link_to account_path(account),
           class: class_names(
@@ -12,7 +12,10 @@
     <div class="flex items-center gap-2 mb-0.5">
       <%= tag.p account.name, class: class_names("text-sm text-primary font-medium truncate", "animate-pulse" => account.syncing?) %>
     </div>
-    <%= tag.p account.short_subtype_label, class: "text-sm text-secondary truncate" %>
+    <%# Only show subtype label when explicitly requested (e.g., non-Depository groups) %>
+    <% if show_subtype_label %>
+      <%= tag.p account.short_subtype_label, class: "text-xs text-secondary truncate" %>
+    <% end %>
   </div>
 
   <div class="ml-auto text-right grow h-10">

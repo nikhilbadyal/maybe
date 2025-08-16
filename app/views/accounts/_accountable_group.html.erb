@@ -25,13 +25,16 @@
 
     <% groups.each do |subtype, subtype_accounts| %>
       <% if subtype.present? %>
-        <div class="px-3 pt-2 text-xs font-medium text-secondary">
-          <%= Depository.short_subtype_label_for(subtype) %>
+        <div class="pl-3 pr-3 my-1">
+          <span class="inline-flex items-center gap-2 text-xs font-medium text-secondary bg-surface rounded px-2 py-0.5">
+            <span class="h-1.5 w-1.5 rounded-full subtype-color-indicator" style="--subtype-color: <%= account_group.color %>;"></span>
+            <%= account_group.short_subtype_label_for(subtype) %>
+          </span>
         </div>
       <% end %>
       <div class="space-y-1">
         <% subtype_accounts.each do |account| %>
-          <%= render "accounts/account_row", account: account, account_group: account_group, mobile: mobile %>
+          <%= render "accounts/account_row", account: account, account_group: account_group, mobile: mobile, show_subtype_label: !subtype.present? %>
         <% end %>
       </div>
     <% end %>

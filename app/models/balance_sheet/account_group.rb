@@ -56,6 +56,16 @@ class BalanceSheet::AccountGroup
     classification_group.currency
   end
 
+  # Returns the accountable class object for this group (e.g., Depository)
+  def accountable_class
+    @accountable_class ||= accountable_type.to_s.constantize
+  end
+
+  # Helper: map subtype to its short label using the accountable class
+  def short_subtype_label_for(subtype)
+    accountable_class.short_subtype_label_for(subtype)
+  end
+
   # Returns an array of [subtype, accounts] pairs suitable for rendering.
   # For depository (Cash), groups by subtype and sorts deterministically with
   # nil/unknown subtypes at the end. Unknown subtypes (not defined in
@@ -64,8 +74,8 @@ class BalanceSheet::AccountGroup
   def grouped_accounts
     if key == "depository"
       accounts
-        .group_by { |account| account.subtype if Depository.short_subtype_label_for(account.subtype) }
-        .sort_by { |subtype, _| [ subtype.nil? ? 1 : 0, Depository.short_subtype_label_for(subtype).to_s ] }
+        .group_by { |account| account.subtype if short_subtype_label_for(account.subtype) }
+        .sort_by { |subtype, _| [ subtype.nil? ? 1 : 0, short_subtype_label_for(subtype).to_s ] }
     else
       [ [ nil, accounts ] ]
     end
