@@ -11,6 +11,9 @@
 @import "./simonweb_pickr.css";
 
 @layer components {
+  .subtype-color-indicator {
+    background-color: var(--subtype-color);
+  }
   .pcr-app{
     position: static !important;
     background: none !important;
