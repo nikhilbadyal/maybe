@@ -1,5 +1,5 @@
 class AccountsController < ApplicationController
-  before_action :set_account, only: %i[sync sparkline toggle_active show destroy]
+  before_action :set_account, only: %i[sync sparkline toggle_active show destroy purge_transactions]
   include Periodable
 
   def index
@@ -62,6 +62,21 @@ class AccountsController < ApplicationController
     else
       @account.destroy_later
       redirect_to accounts_path, notice: "Account scheduled for deletion"
+    end
+  end
+
+  def purge_transactions
+    if @account.linked?
+      return redirect_to account_path(@account), alert: "Cannot purge a linked account"
+    end
+
+    begin
+      deleted_count = @account.purge_entries_except_opening_anchor!
+      @account.sync_later
+      redirect_to account_path(@account), notice: "Purged #{deleted_count} transaction#{deleted_count == 1 ? '' : 's'}"
+    rescue StandardError => e
+      Rails.logger.error("Failed to purge transactions for account #{@account.id}: #{e.message}")
+      redirect_to account_path(@account), alert: "An error occurred while purging transactions."
     end
   end
 

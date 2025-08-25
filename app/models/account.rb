@@ -164,4 +164,24 @@ class Account < ApplicationRecord
       raise "Unknown account type: #{accountable_type}"
     end
   end
+
+  # Purge all entries for this account except the opening anchor valuation.
+  # Also clears balances and holdings. Returns the number of deleted entries.
+  def purge_entries_except_opening_anchor!
+    ActiveRecord::Base.transaction do
+      # Lock the account row to prevent concurrent modifications while purging
+      lock!
+
+      opening_anchor_entry_id = valuations.opening_anchor.joins(:entry).limit(1).pick("entries.id")
+
+      scope = entries
+      scope = scope.where.not(id: opening_anchor_entry_id) if opening_anchor_entry_id.present?
+      deleted_count = scope.destroy_all.size
+
+      balances.delete_all
+      holdings.delete_all
+
+      deleted_count
+    end
+  end
 end
