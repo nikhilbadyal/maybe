@@ -118,17 +118,7 @@ Rails.application.routes.draw do
     resources :mappings, only: :update, module: :import
   end
 
-  resources :accounts, only: %i[index new], shallow: true do
-    collection do
-      post :sync_all
-    end
-
-    member do
-      post :sync
-      get :chart
-      get :sparkline
-    end
-  end
+  # Consolidated accounts routes
 
   resources :holdings, only: %i[index new show destroy]
   resources :trades, only: %i[show new create update destroy]
@@ -177,6 +167,7 @@ Rails.application.routes.draw do
       post :sync
       get :sparkline
       patch :toggle_active
+      delete :purge_transactions
     end
 
     collection do
