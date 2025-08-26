@@ -8,6 +8,7 @@ require 'rubygems'
 require 'rubygems/version'
 require 'rubygems/requirement'
 require 'pathname'
+require 'thread'
 
 # Simple helper for timestamped logs
 def log(message)
@@ -152,48 +153,61 @@ rescue StandardError => e
   [false, "Comparison error: #{e.message}"]
 end
 
-def check_gems(specs)
-  log "Checking #{specs.size} gems..."
-  results = []
+def check_gems(specs, workers: 5)
+  log "Checking #{specs.size} gems with #{workers} workers..."
+  results = Queue.new
+  tasks   = Queue.new
 
-  specs.each_with_index do |spec, idx|
-    log "Processing gem #{idx + 1}/#{specs.size}: #{spec.name}"
+  # Enqueue all specs
+  specs.each { |spec| tasks << spec }
+  workers.times { tasks << :done } # poison pills
 
-    if spec.git_or_path?
-      results << GemCheckResult.new(
-        name: spec.name,
-        current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
-        latest_version: '(n/a for git/path)',
-        status: 'unknown',
-        note: 'Git/path/github-sourced gem; version not resolved from RubyGems'
-      )
-      next
+  threads = workers.times.map do
+    Thread.new do
+      loop do
+        spec = tasks.pop
+        break if spec == :done
+
+        log "Worker #{Thread.current.object_id} -> #{spec.name}"
+
+        if spec.git_or_path?
+          results << GemCheckResult.new(
+            name: spec.name,
+            current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
+            latest_version: '(n/a for git/path)',
+            status: 'unknown',
+            note: 'Git/path/github-sourced gem; version not resolved from RubyGems'
+          )
+          next
+        end
+
+        latest = fetch_latest_version(spec.name)
+        if latest.nil?
+          results << GemCheckResult.new(
+            name: spec.name,
+            current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
+            latest_version: '(unknown)',
+            status: 'unknown',
+            note: 'Could not fetch latest version from RubyGems'
+          )
+          next
+        end
+
+        ok, note = compare_requirement_to_latest(spec.requirements, latest)
+        status = ok ? 'up_to_date' : 'outdated'
+        results << GemCheckResult.new(
+          name: spec.name,
+          current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
+          latest_version: latest,
+          status: status,
+          note: note
+        )
+      end
     end
-
-    latest = fetch_latest_version(spec.name)
-    if latest.nil?
-      results << GemCheckResult.new(
-        name: spec.name,
-        current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
-        latest_version: '(unknown)',
-        status: 'unknown',
-        note: 'Could not fetch latest version from RubyGems'
-      )
-      next
-    end
-
-    ok, note = compare_requirement_to_latest(spec.requirements, latest)
-    status = ok ? 'up_to_date' : 'outdated'
-    results << GemCheckResult.new(
-      name: spec.name,
-      current_req: spec.requirements.join(', ').empty? ? '(none)' : spec.requirements.join(', '),
-      latest_version: latest,
-      status: status,
-      note: note
-    )
   end
 
-  results
+  threads.each(&:join)
+  results.size.times.map { results.pop } # collect results
 end
 
 def print_report(results)
