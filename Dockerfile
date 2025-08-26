@@ -8,30 +8,31 @@ FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 
 # Install base packages
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libvips postgresql-client libyaml-0-2
+RUN apt-get update -qq \
+    && apt-get install --no-install-recommends -y curl libvips postgresql-client libyaml-0-2 \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Set production environment
 ARG BUILD_COMMIT_SHA
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development" \
+    BUNDLE_WITHOUT="development test" \
     BUILD_COMMIT_SHA=${BUILD_COMMIT_SHA}
-    
+
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
-# Install packages needed to build gems
-RUN apt-get install --no-install-recommends -y build-essential libpq-dev git pkg-config libyaml-dev
-
 # Install application gems
 COPY .ruby-version Gemfile Gemfile.lock ./
-RUN bundle install
-
-RUN rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
-
-RUN bundle exec bootsnap precompile --gemfile -j 0
+ARG BUNDLE_JOBS=4
+RUN apt-get update -qq \
+    && apt-get install --no-install-recommends -y build-essential libpq-dev git pkg-config libyaml-dev \
+    && bundle install --jobs ${BUNDLE_JOBS:-4} --retry 3 \
+    && rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git \
+    && bundle exec bootsnap precompile --gemfile -j 0 \
+    && apt-get purge -y --auto-remove build-essential libpq-dev git pkg-config libyaml-dev \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Copy application code
 COPY . .
@@ -45,18 +46,18 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
-# Clean up installation packages to reduce image size
-RUN rm -rf /var/lib/apt/lists /var/cache/apt/archives
+ARG UID=1000
+ARG GID=1000
+# Run and own only the runtime files as a non-root user for security
+RUN groupadd --system --gid ${GID} rails && \
+    useradd rails --uid ${UID} --gid ${GID} --create-home --shell /bin/bash
 
 # Copy built artifacts: gems, application
-COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
-COPY --from=build /rails /rails
+COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
+COPY --chown=rails:rails --from=build /rails /rails
 
-# Run and own only the runtime files as a non-root user for security
-RUN groupadd --system --gid 1000 rails && \
-    useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER 1000:1000
+# Switch to non-root user after files are in place
+USER ${UID}:${GID}
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
