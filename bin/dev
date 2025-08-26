@@ -1,22 +1,17 @@
 #!/usr/bin/env sh
+set -euo pipefail
 
-if ! gem list foreman -i --silent; then
-  echo "Installing foreman..."
-  gem install foreman
-  
-  # Add rehash for rbenv users
-  if command -v rbenv > /dev/null; then
-    echo "Running rbenv rehash..."
-    rbenv rehash
-  fi
-fi
+# ---------------------------
+# Environment defaults
+# ---------------------------
+: "${PORT:=3000}"                  # default port
+export PORT
 
-# Default to port 3000 if not specified
-export PORT="${PORT:-3000}"
-
-# Let the debug gem allow remote connections,
-# but avoid loading until `debugger` is called
+# Allow debug gem to accept remote connections lazily
 export RUBY_DEBUG_OPEN="true"
 export RUBY_DEBUG_LAZY="true"
 
+# ---------------------------
+# Start services
+# ---------------------------
 exec bundle exec foreman start -f Procfile.dev "$@"
