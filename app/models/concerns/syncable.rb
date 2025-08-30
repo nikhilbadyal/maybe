@@ -25,8 +25,6 @@ module Syncable
             window_start_date: window_start_date,
             window_end_date: window_end_date
           )
-
-          SyncJob.perform_later(sync)
         end
 
         sync

@@ -1,7 +1,7 @@
-<%# locals: (manual_accounts:, plaid_items:) %>
+<%# locals: (family: nil, manual_accounts:, plaid_items:, **args) %>
 
 <% if manual_accounts.any? || plaid_items.any? %>
-  <% if Current.family.syncing? %>
+  <% if (family || Current.family)&.syncing? %>
     <%= render partial: "shared/sync_indicator", locals: { size: "sm" } %>
   <% else %>
     <%= icon(

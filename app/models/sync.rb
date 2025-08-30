@@ -20,6 +20,7 @@ class Sync < ApplicationRecord
   scope :visible, -> { incomplete.where("syncs.created_at > ?", VISIBLE_FOR.ago) }
 
   after_commit :update_family_sync_timestamp
+  after_commit :enqueue_job, on: :create
 
   validate :window_valid
 
@@ -127,6 +128,10 @@ class Sync < ApplicationRecord
   end
 
   private
+    def enqueue_job
+      SyncJob.perform_later(self)
+    end
+
     def log_status_change
       Rails.logger.info("changing from #{aasm.from_state} to #{aasm.to_state} (event: #{aasm.current_event})")
     end

@@ -22,7 +22,7 @@ class Family::SyncCompleteEvent
     family.broadcast_replace(
       target: "sync_all_button",
       partial: "accounts/sync_all_button",
-      locals: { manual_accounts: family.accounts.manual.alphabetically, plaid_items: family.plaid_items.ordered }
+      locals: { family: family, manual_accounts: family.accounts.manual.alphabetically, plaid_items: family.plaid_items.ordered }
     )
   end
 end
