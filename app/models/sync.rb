@@ -21,6 +21,7 @@ class Sync < ApplicationRecord
 
   after_commit :update_family_sync_timestamp
   after_commit :enqueue_job, on: :create
+  after_commit :broadcast_family_sync_button, on: :create
 
   validate :window_valid
 
@@ -172,6 +173,8 @@ class Sync < ApplicationRecord
 
     def handle_start_transition
       report_warnings
+      # Broadcast early so UI shows spinner as soon as a sync starts
+      broadcast_family_sync_button
     end
 
     def handle_transition
@@ -198,5 +201,18 @@ class Sync < ApplicationRecord
       else
         syncable.family
       end
+    end
+
+    def broadcast_family_sync_button
+      # Avoid multiple quick re-renders: only broadcast for the top-level Family sync
+      return unless syncable.is_a?(Family)
+
+      family.broadcast_replace(
+        target: "sync_all_button",
+        partial: "accounts/sync_all_button_frame",
+        locals: { family: family, manual_accounts: family.accounts.manual.alphabetically, plaid_items: family.plaid_items.ordered }
+      )
+    rescue => e
+      Rails.logger.error("Error broadcasting sync button state: #{e.message}")
     end
 end

@@ -2,9 +2,7 @@
 <header class="flex justify-between items-center text-primary font-medium">
   <h1 class="text-xl"><%= t(".accounts") %></h1>
   <div class="flex items-center gap-5">
-    <%= turbo_frame_tag "sync_all_button" do %>
-      <%= render "accounts/sync_all_button", family: Current.family, manual_accounts: @manual_accounts, plaid_items: @plaid_items %>
-    <% end %>
+    <%= render "accounts/sync_all_button_frame", family: Current.family, manual_accounts: @manual_accounts, plaid_items: @plaid_items %>
     <div class="flex items-center gap-2">
       <%= render DS::Link.new(
         text: "New account",

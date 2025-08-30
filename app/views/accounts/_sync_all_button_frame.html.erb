@@ -1,0 +1,6 @@
+<%# locals: (family:, manual_accounts:, plaid_items:) %>
+
+<%= turbo_frame_tag "sync_all_button" do %>
+  <%= render "accounts/sync_all_button", family: family, manual_accounts: manual_accounts, plaid_items: plaid_items %>
+<% end %>
+
