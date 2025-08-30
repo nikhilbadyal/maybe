@@ -24,9 +24,15 @@
       </div>
 
       <% unless account.pending_deletion? %>
-        <%= link_to edit_account_path(account, return_to: return_to), data: { turbo_frame: :modal }, class: "group-hover/account:flex hidden hover:opacity-80 items-center justify-center" do %>
-          <%= icon("pencil-line", size: "sm") %>
-        <% end %>
+        <%= render DS::Link.new(
+          href: edit_account_path(account, return_to: return_to),
+          variant: :icon,
+          size: :sm,
+          icon: "pencil-line",
+          frame: "modal",
+          class: "hidden group-hover/account:flex focus-visible:flex hover:opacity-80",
+          "aria-label": "Edit account"
+        ) %>
       <% end %>
     </div>
     <div class="flex items-center gap-8">
