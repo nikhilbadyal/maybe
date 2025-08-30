@@ -6,9 +6,16 @@
       <% last_month_of_previous_year = Date.new(year - 1, 12, 1) %>
 
       <% if Budget.budget_date_valid?(last_month_of_previous_year, family: family) %>
-        <%= link_to picker_budgets_path(year: year - 1), data: { turbo_frame: "budget_picker" }, class: "p-2 flex items-center justify-center hover:bg-alpha-black-25 rounded-md" do %>
-          <%= icon "chevron-left" %>
-        <% end %>
+        <%= render DS::Link.new(
+          href: picker_budgets_path(year: year - 1),
+          variant: :icon,
+          size: :md,
+          icon: "chevron-left",
+          frame: "budget_picker",
+          "aria-label": "Previous year",
+          title: "Previous year",
+          "aria-controls": "budget_picker"
+        ) %>
       <% else %>
         <span class="p-2 flex items-center justify-center text-subdued rounded-md">
           <%= icon "chevron-left", color: "current" %>
@@ -22,9 +29,16 @@
       <% first_month_of_next_year = Date.new(year + 1, 1, 1) %>
 
       <% if Budget.budget_date_valid?(first_month_of_next_year, family: family) %>
-        <%= link_to picker_budgets_path(year: year + 1), data: { turbo_frame: "budget_picker" }, class: "p-2 flex items-center justify-center hover:bg-alpha-black-25 rounded-md" do %>
-          <%= icon "chevron-right" %>
-        <% end %>
+        <%= render DS::Link.new(
+          href: picker_budgets_path(year: year + 1),
+          variant: :icon,
+          size: :md,
+          icon: "chevron-right",
+          frame: "budget_picker",
+          "aria-label": "Next year",
+          title: "Next year",
+          "aria-controls": "budget_picker"
+        ) %>
       <% else %>
         <span class="p-2 flex items-center justify-center text-subdued rounded-md">
           <%= icon "chevron-right", color: "current" %>

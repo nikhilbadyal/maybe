@@ -35,8 +35,28 @@
 
       <div class="flex justify-center w-full md:w-auto">
         <div class="bg-gray-50 rounded-lg inline-flex p-1 space-x-2 text-sm text-primary font-medium w-full md:w-auto">
-          <%= link_to "All rows", import_clean_path(@import, per_page: params[:per_page], view: "all"), class: "p-2 rounded-lg flex-1 md:flex-auto text-center #{params[:view] != 'errors' ? 'bg-container' : ''}" %>
-          <%= link_to "Error rows", import_clean_path(@import, per_page: params[:per_page], view: "errors"), class: "p-2 rounded-lg flex-1 md:flex-auto text-center #{params[:view] == 'errors' ? 'bg-container' : ''}" %>
+          <%= render DS::Link.new(
+            href: import_clean_path(@import, request.query_parameters.except('view').merge(view: 'all')),
+            variant: :ghost,
+            size: :sm,
+            text: "All rows",
+            class: class_names(
+              "flex-1 md:flex-auto text-center",
+              params[:view] != 'errors' ? 'bg-container' : ''
+            ),
+            "aria-current": params[:view] != 'errors' ? "page" : nil
+          ) %>
+          <%= render DS::Link.new(
+            href: import_clean_path(@import, request.query_parameters.except('view').merge(view: 'errors')),
+            variant: :ghost,
+            size: :sm,
+            text: "Error rows",
+            class: class_names(
+              "flex-1 md:flex-auto text-center",
+              params[:view] == 'errors' ? 'bg-container' : ''
+            ),
+            "aria-current": params[:view] == 'errors' ? "page" : nil
+          ) %>
         </div>
       </div>
     </div>
