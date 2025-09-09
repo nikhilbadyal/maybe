@@ -40,7 +40,6 @@ jobs:
 
   build:
     name: Build Docker image
-    needs: [ ci ]
 
     strategy:
       fail-fast: false

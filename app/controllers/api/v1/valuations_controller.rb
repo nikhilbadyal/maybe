@@ -54,7 +54,7 @@ class Api::V1::ValuationsController < Api::V1::BaseController
       return render_json({
         error: "unprocessable_entity",
         message: "Cannot create valuations for future dates.",
-        details: "Valuation date must be today or earlier."
+        details: "Valuation date must be today (#{Date.current}) or earlier."
       }, status: :unprocessable_entity)
     end
 
