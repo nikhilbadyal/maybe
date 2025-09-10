@@ -108,6 +108,38 @@ services:
     depends_on:
       - postgres
 
+  backup:
+    image: alpine:latest
+    container_name: maybe-backup
+    <<: *common
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      CLOUDFLARE_ACCESS_KEY_ID: ${CLOUDFLARE_ACCESS_KEY_ID}
+      CLOUDFLARE_SECRET_ACCESS_KEY: ${CLOUDFLARE_SECRET_ACCESS_KEY}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+      CLOUDFLARE_BUCKET: ${CLOUDFLARE_BUCKET}
+      APPRISE_URL: ${APPRISE_URL}
+    command: >
+      sh -c "
+        apk add --no-cache postgresql-client aws-cli dcron py3-pip &&
+        pip install apprise --break-system-packages &&
+        mkdir -p /var/log/cron &&
+        echo '0 */4 * * * /backup.sh >> /var/log/cron/backup.log 2>&1' > /etc/crontabs/root &&
+        echo '🎯 Backup service with cron ready!' &&
+        echo '   Backups scheduled every 4 hours (0,4,8,12,16,20)' &&
+        echo '   Manual backup: docker-compose exec backup /backup.sh' &&
+        echo '   View logs: docker-compose exec backup tail -f /var/log/cron/backup.log' &&
+        crond -f -l 8
+      "
+    profiles:
+      - backup
+
 volumes:
   app-storage:
   postgres-data:
