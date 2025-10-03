@@ -31,17 +31,17 @@ The script will verify these existing variables from your `.env.docker`:
 
 ```bash
 # Start backup service
-docker-compose --profile backup up -d
+docker compose --profile backup up -d
 
 # Check it's running
-docker-compose ps
+docker compose ps
 ```
 
 ### 3. Test Backup
 
 ```bash
 # Run manual backup
-docker-compose exec backup /backup.sh
+docker compose exec backup /backup.sh
 ```
 
 ### 4. Automated Backups (Built-in)
@@ -49,7 +49,7 @@ docker-compose exec backup /backup.sh
 The backup container has **built-in cron scheduling** - no external cron needed!
 
 - ✅ **Schedule**: Every 4 hours (0:00, 4:00, 8:00, 12:00, 16:00, 20:00 UTC)
-- ✅ **Automatic**: Starts when you run `docker-compose --profile backup up -d`
+- ✅ **Automatic**: Starts when you run `docker compose --profile backup up -d`
 - ✅ **Self-contained**: Container manages its own schedule
 - ✅ **Integrity validation**: Verifies backups before/after upload
 - ✅ **Auto-cleanup**: Keeps only last 7 days of backups in R2
@@ -109,16 +109,16 @@ Backup completed successfully
 
 ```bash
 # Start backup service
-docker-compose --profile backup up -d
+docker compose --profile backup up -d
 
 # Run backup
-docker-compose exec backup /backup.sh
+docker compose exec backup /backup.sh
 
 # View logs
-docker-compose logs backup
+docker compose logs backup
 
 # Stop backup service
-docker-compose --profile backup down
+docker compose --profile backup down
 ```
 
 ## ✅ Perfect for Your Setup!
@@ -137,10 +137,10 @@ Your environment already has all the required variables configured:
 Just run:
 ```bash
 # Start backup service
-docker-compose --profile backup up -d
+docker compose --profile backup up -d
 
 # Test backup
-docker-compose exec backup /backup.sh
+docker compose exec backup /backup.sh
 ```
 
 Your PostgreSQL database will be automatically backed up to Cloudflare R2 **every 4 hours** with automatic cleanup (keeps last 7 days only) and notifications! 🧹📱
