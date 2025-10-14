@@ -39,4 +39,27 @@ class InviteCodesControllerTest < ActionDispatch::IntegrationTest
 
     assert InviteCode.exists?(invite_code.id), "Invite code should not be deleted"
   end
+
+  test "handles destroy failures gracefully" do
+    sign_in users(:family_admin)
+    invite_code = InviteCode.create!
+
+    # Mock destroy to return false
+    InviteCode.any_instance.stubs(:destroy).returns(false)
+
+    delete invite_code_url(invite_code)
+
+    assert_redirected_to invite_codes_url
+    assert_equal "Failed to delete invite code", flash[:alert]
+    assert InviteCode.exists?(invite_code.id), "Invite code should still exist"
+  end
+
+  test "handles non-existent invite codes" do
+    sign_in users(:family_admin)
+
+    delete invite_code_url("non-existent-id")
+
+    assert_redirected_to invite_codes_url
+    assert_equal "Invite code not found", flash[:alert]
+  end
 end

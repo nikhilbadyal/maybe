@@ -15,8 +15,17 @@ class InviteCodesController < ApplicationController
     raise StandardError, "You are not allowed to delete invite codes" unless Current.user.admin?
 
     code = InviteCode.find(params[:id])
-    code.destroy!
-    redirect_back_or_to invite_codes_path, notice: "Code deleted"
+
+    if code.destroy
+      flash[:notice] = "Code deleted"
+    else
+      flash[:alert] = "Failed to delete invite code"
+    end
+
+    redirect_back_or_to invite_codes_path
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = "Invite code not found"
+    redirect_back_or_to invite_codes_path
   end
 
   private
