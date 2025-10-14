@@ -9,6 +9,16 @@
   data-theme-user-preference-value="<%= Current.user&.theme || "system" %>"
   class="h-full text-primary overflow-hidden lg:overflow-auto font-sans <%= @os %>">
   <head>
+    <%# Resolve "system" theme before any other scripts/styles to prevent flash %>
+    <% if theme == "system" %>
+      <script>
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      </script>
+    <% end %>
     <%= render "layouts/shared/head" %>
     <%= yield :head %>
   </head>
