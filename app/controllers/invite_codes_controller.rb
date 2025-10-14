@@ -11,6 +11,14 @@ class InviteCodesController < ApplicationController
     redirect_back_or_to invite_codes_path, notice: "Code generated"
   end
 
+  def destroy
+    raise StandardError, "You are not allowed to delete invite codes" unless Current.user.admin?
+
+    code = InviteCode.find(params[:id])
+    code.destroy!
+    redirect_back_or_to invite_codes_path, notice: "Code deleted"
+  end
+
   private
 
     def ensure_self_hosted
