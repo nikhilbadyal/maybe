@@ -45,8 +45,6 @@ services:
     <<: *common
     volumes:
       - app-storage:/rails/storage
-    ports:
-      - "80:80"
     environment:
       <<: *rails_env
     healthcheck:
