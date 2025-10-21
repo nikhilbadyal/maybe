@@ -94,14 +94,14 @@ services:
 
   cloudflared:
     <<: *cloudflared
-    container_name: maybe-cloudflared
+    container_name: maybe-web-tunnel
     command: tunnel run --token ${CLOUDFLARED_TOKEN}
     depends_on:
       - web
 
   cloudflared-postgres:
     <<: *cloudflared
-    container_name: maybe-cloudflared-postgres
+    container_name: maybe-postgres-tunnel
     command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN}
     depends_on:
       - postgres
