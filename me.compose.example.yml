@@ -43,6 +43,8 @@ services:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
     <<: *common
+    expose:
+      - "3000"
     volumes:
       - app-storage:/rails/storage
     environment:
@@ -58,6 +60,9 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    networks:
+      - nginx_network
+      - maybe_net
 
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
@@ -92,13 +97,7 @@ services:
       timeout: 5s
       retries: 5
 
-  cloudflared:
-    <<: *cloudflared
-    container_name: maybe-web-tunnel
-    command: tunnel run --token ${CLOUDFLARED_TOKEN}
-    depends_on:
-      - web
-
+  # Keep only Postgres tunnel (for remote DB access)
   cloudflared-postgres:
     <<: *cloudflared
     container_name: maybe-postgres-tunnel
@@ -145,5 +144,7 @@ volumes:
   ngrok-data:
 
 networks:
+  nginx_network:
+    external: true
   maybe_net:
     driver: bridge
