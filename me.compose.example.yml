@@ -12,7 +12,7 @@ x-common: &common
   restart: unless-stopped
   pull_policy: always
   networks:
-    - maybe_net
+    - homelab_network
   env_file:
     - .env.docker
 
@@ -21,24 +21,6 @@ x-cloudflared: &cloudflared
   <<: *common
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: maybe-postgres
-    <<: *common
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      LANG: en_US.utf8
-      LC_ALL: en_US.utf8
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   web:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
@@ -58,11 +40,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
-    networks:
-      - nginx_network
-      - maybe_net
 
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
@@ -82,8 +59,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
 
   redis:
     image: redis:latest
@@ -97,54 +72,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # Keep only Postgres tunnel (for remote DB access)
-  cloudflared-postgres:
-    <<: *cloudflared
-    container_name: maybe-postgres-tunnel
-    command: tunnel run --token ${CLOUDFLARED_POSTGRES_TOKEN}
-    depends_on:
-      - postgres
-
-  backup:
-    image: alpine:latest
-    container_name: maybe-backup
-    <<: *common
-    volumes:
-      - ./backup.sh:/backup.sh:ro
-    environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      CLOUDFLARE_ACCESS_KEY_ID: ${CLOUDFLARE_ACCESS_KEY_ID}
-      CLOUDFLARE_SECRET_ACCESS_KEY: ${CLOUDFLARE_SECRET_ACCESS_KEY}
-      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
-      CLOUDFLARE_BUCKET: ${CLOUDFLARE_BUCKET}
-      APPRISE_URL: ${APPRISE_URL}
-    command: >
-      sh -c "
-        apk add --no-cache postgresql-client aws-cli dcron py3-pip &&
-        pip install apprise --break-system-packages &&
-        mkdir -p /var/log/cron &&
-        echo '0 */4 * * * /backup.sh >> /var/log/cron/backup.log 2>&1' > /etc/crontabs/root &&
-        echo '🎯 Backup service with cron ready!' &&
-        echo '   Backups scheduled every 4 hours (0,4,8,12,16,20)' &&
-        echo '   Manual backup: docker-compose exec backup /backup.sh' &&
-        echo '   View logs: docker-compose exec backup tail -f /var/log/cron/backup.log' &&
-        crond -f -l 8
-      "
-    profiles:
-      - backup
-
 volumes:
   app-storage:
-  postgres-data:
   redis-data:
   ngrok-data:
 
 networks:
-  nginx_network:
+  homelab_network:
     external: true
-  maybe_net:
-    driver: bridge
