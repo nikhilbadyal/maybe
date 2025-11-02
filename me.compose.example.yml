@@ -5,8 +5,6 @@
 x-rails-env: &rails_env
   RAILS_FORCE_SSL: "true"
   RAILS_ASSUME_SSL: "true"
-  REDIS_URL: redis://redis:6379/1
-  OPENAI_ACCESS_TOKEN: ${OPENAI_ACCESS_TOKEN}
 
 x-common: &common
   restart: unless-stopped
@@ -32,15 +30,11 @@ services:
     environment:
       <<: *rails_env
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost/sessions/new" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/sessions/new" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    depends_on:
-      redis:
-        condition: service_healthy
-
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-worker
@@ -56,26 +50,9 @@ services:
       timeout: 15s
       retries: 5
       start_period: 30s
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  redis:
-    image: redis:latest
-    container_name: maybe-redis
-    <<: *common
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
   app-storage:
-  redis-data:
-  ngrok-data:
 
 networks:
   homelab_network:
