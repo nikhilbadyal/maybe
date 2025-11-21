@@ -1,0 +1,66 @@
+x-db-env: &db_env
+  POSTGRES_USER: postgres
+  POSTGRES_DB: maybe_development
+  POSTGRES_PASSWORD: postgres
+
+x-rails-env: &rails_env
+  DB_HOST: db
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  REDIS_URL: redis://redis:6379/1
+  RAILS_ENV: development
+  PORT: 3000
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+      - bundle_cache:/bundle
+    ports:
+      - "3000:3000"
+    command: bash -c "cd /workspace && bundle check || bundle install && bin/rails db:prepare && rm -f tmp/pids/server.pid && bundle exec foreman start -f Procfile.dev"
+    environment:
+      <<: *rails_env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      <<: *db_env
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d maybe_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:
+  bundle_cache:
