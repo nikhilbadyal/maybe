@@ -57,11 +57,16 @@
             <%= form.select :account_id, @sorted_accounts.pluck(:name, :id), { label: "Account (optional)", include_blank: "Multi-account import", selected: @import.account_id } %>
           <% end %>
 
-          <%= form.text_area :raw_file_str,
-                       rows: 10,
-                       required: true,
-                       placeholder: "Paste your CSV file contents here",
-                       "data-auto-submit-form-target": "auto" %>
+          <div class="form-field">
+            <div class="form-field__body">
+              <%= form.text_area :raw_file_str,
+                           rows: 10,
+                           required: true,
+                           placeholder: "Paste your CSV file contents here",
+                           class: "form-field__input",
+                           "data-auto-submit-form-target": "auto" %>
+            </div>
+          </div>
 
           <%= form.submit "Upload CSV", disabled: @import.complete? %>
         <% end %>
