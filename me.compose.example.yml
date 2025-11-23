@@ -22,6 +22,7 @@ services:
   web:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
+    mem_limit: 250m
     <<: *common
     expose:
       - "3000"
@@ -38,6 +39,7 @@ services:
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-worker
+    mem_limit: 250m
     <<: *common
     command: bundle exec sidekiq
     volumes:
