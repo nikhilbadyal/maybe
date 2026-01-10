@@ -1,0 +1,1 @@
+../../.cursor/rules/ui-ux-design-guidelines.mdc

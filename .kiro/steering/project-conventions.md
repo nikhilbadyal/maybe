@@ -1,0 +1,1 @@
+../../.cursor/rules/project-conventions.mdc

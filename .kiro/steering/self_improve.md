@@ -1,0 +1,1 @@
+../../.cursor/rules/self_improve.mdc

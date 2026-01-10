@@ -1,0 +1,1 @@
+../../.cursor/rules/stimulus_conventions.mdc

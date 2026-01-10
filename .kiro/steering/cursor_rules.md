@@ -1,0 +1,1 @@
+../../.cursor/rules/cursor_rules.mdc

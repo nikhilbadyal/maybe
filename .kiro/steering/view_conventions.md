@@ -1,0 +1,1 @@
+../../.cursor/rules/view_conventions.mdc
