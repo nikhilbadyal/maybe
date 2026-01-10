@@ -7,6 +7,8 @@ x-rails-env: &rails_env
   RAILS_ASSUME_SSL: "true"
 
 x-common: &common
+  mem_limit: 2g
+  cpus: "2.0"
   restart: unless-stopped
   pull_policy: always
   networks:
@@ -22,7 +24,6 @@ services:
   web:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-web
-    mem_limit: 250m
     <<: *common
     expose:
       - "3000"
@@ -39,7 +40,6 @@ services:
   worker:
     image: ghcr.io/nikhilbadyal/maybe:latest
     container_name: maybe-worker
-    mem_limit: 250m
     <<: *common
     command: bundle exec sidekiq
     volumes:
