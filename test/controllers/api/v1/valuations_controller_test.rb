@@ -189,4 +189,3 @@ class Api::V1::ValuationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil response_body["valuation"]["notes"]
   end
 end
-
