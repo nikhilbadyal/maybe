@@ -149,4 +149,44 @@ class Api::V1::ValuationsControllerTest < ActionDispatch::IntegrationTest
     balance_changes = response_body["balance_changes"]
     assert_equal "1500.75", balance_changes["new_balance"].to_s
   end
+
+  test "should create valuation with notes" do
+    # Verify that the optional notes parameter is saved on the entry
+    valuation_date = Date.current.to_s
+    note_text = "Monthly SIP reconciliation"
+
+    assert_difference "Valuation.count", 1 do
+      post api_v1_account_valuations_url(@account),
+           params: { valuation: { balance: 2000.00, date: valuation_date, notes: note_text } },
+           headers: { Authorization: "Bearer #{@token.token}" }
+    end
+
+    assert_response :created
+    response_body = JSON.parse(response.body)
+
+    # The notes field should appear in the valuation response
+    assert_equal note_text, response_body["valuation"]["notes"]
+
+    # Confirm it was actually persisted on the entry record
+    entry = @account.entries.valuations.find_by(date: valuation_date)
+    assert_equal note_text, entry.notes
+  end
+
+  test "should create valuation without notes when notes is omitted" do
+    # Verify that notes remains optional and nil when not provided
+    valuation_date = Date.current.to_s
+
+    assert_difference "Valuation.count", 1 do
+      post api_v1_account_valuations_url(@account),
+           params: { valuation: { balance: 3000.00, date: valuation_date } },
+           headers: { Authorization: "Bearer #{@token.token}" }
+    end
+
+    assert_response :created
+    response_body = JSON.parse(response.body)
+
+    # Notes should be nil/null when not provided
+    assert_nil response_body["valuation"]["notes"]
+  end
 end
+

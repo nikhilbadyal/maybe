@@ -6,9 +6,10 @@ class Account::ReconciliationManager
   end
 
   # Reconciles balance by creating a Valuation entry. If existing valuation is provided, it will be updated instead of creating a new one.
-  def reconcile_balance(balance:, date: Date.current, dry_run: false, existing_valuation_entry: nil)
+  # Accepts an optional `notes` parameter to attach notes to the entry.
+  def reconcile_balance(balance:, date: Date.current, dry_run: false, existing_valuation_entry: nil, notes: nil)
     old_balance_components = old_balance_components(reconciliation_date: date, existing_valuation_entry: existing_valuation_entry)
-    prepared_valuation = prepare_reconciliation(balance, date, existing_valuation_entry)
+    prepared_valuation = prepare_reconciliation(balance, date, existing_valuation_entry, notes: notes)
 
     unless dry_run
       prepared_valuation.save!
@@ -41,7 +42,9 @@ class Account::ReconciliationManager
       keyword_init: true
     )
 
-    def prepare_reconciliation(balance, date, existing_valuation)
+    # Prepares the valuation entry record, either finding an existing one or building a new one.
+    # Assigns the provided balance, date, currency, and optional notes to the entry.
+    def prepare_reconciliation(balance, date, existing_valuation, notes: nil)
       valuation_record = existing_valuation ||
                          account.entries.valuations.find_by(date: date) || # In case of conflict, where existing valuation is not passed as arg, but one exists
                          account.entries.build(
@@ -49,11 +52,15 @@ class Account::ReconciliationManager
                                   entryable: Valuation.new(kind: "reconciliation")
                                 )
 
-      valuation_record.assign_attributes(
+      # Build the attributes hash, only including notes if it was explicitly provided
+      attrs = {
         date: date,
         amount: balance,
         currency: account.currency
-      )
+      }
+      attrs[:notes] = notes unless notes.nil?
+
+      valuation_record.assign_attributes(attrs)
 
       valuation_record
     end

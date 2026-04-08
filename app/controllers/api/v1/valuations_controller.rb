@@ -8,6 +8,7 @@ class Api::V1::ValuationsController < Api::V1::BaseController
   param :valuation, Hash, required: true do
     param :balance, [ Float, String ], desc: "The new balance of the account (accepts numbers or numeric strings)", required: true
     param :date, String, desc: "The date of the valuation (YYYY-MM-DD)", required: true
+    param :notes, String, desc: "Optional notes for this valuation entry", required: false
   end
   def create
     account = current_resource_owner.family.accounts.find(params[:account_id])
@@ -66,7 +67,10 @@ class Api::V1::ValuationsController < Api::V1::BaseController
       }, status: :unprocessable_entity)
     end
 
-    result = account.create_reconciliation(balance: balance, date: date)
+    # Create the reconciliation entry with the validated balance and date.
+    # Notes are applied separately after entry creation since
+    # create_reconciliation only handles balance/date concerns.
+    result = account.create_reconciliation(balance: balance, date: date, notes: valuation_params[:notes])
 
     if result.success?
       # Find the created/updated valuation entry
@@ -80,6 +84,7 @@ class Api::V1::ValuationsController < Api::V1::BaseController
           date: date.to_s,
           amount: result.new_balance,
           currency: account.currency,
+          notes: valuation_entry.notes,
           created_at: valuation_entry.created_at,
           updated_at: valuation_entry.updated_at
         },
@@ -101,8 +106,9 @@ class Api::V1::ValuationsController < Api::V1::BaseController
 
   private
 
+    # Permit balance, date (required), and notes (optional) from the valuation payload
     def valuation_params
-      params.require(:valuation).permit(:balance, :date).tap do |p|
+      params.require(:valuation).permit(:balance, :date, :notes).tap do |p|
         p.require([ :balance, :date ])
       end
     end
