@@ -10,7 +10,7 @@ on:
 
 jobs:
   scan_ruby:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-android-lint
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -26,7 +26,7 @@ jobs:
         run: bin/brakeman --no-pager
 
   scan_js:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-android-test
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -42,7 +42,7 @@ jobs:
         run: bin/importmap audit
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-api
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -68,7 +68,7 @@ jobs:
           retention-days: 1
 
   lint_js:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-api-test
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -89,7 +89,7 @@ jobs:
 
   # Unit + Integration Tests
   test_unit_integration:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-docker
     timeout-minutes: 10
     env:
       PLAID_CLIENT_ID: foo
@@ -145,7 +145,7 @@ jobs:
 
   # System Tests
   test_system:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-scanwise
     timeout-minutes: 10
     env:
       PLAID_CLIENT_ID: foo
@@ -210,7 +210,7 @@ jobs:
   # SonarQube Analysis (Self-Hosted Server)
 #  sonar:
 #    name: SonarQube Analysis
-#    runs-on: ubuntu-latest
+#    runs-on: namespace-profile-android
 #    needs: [test_unit_integration, test_system, lint]
 #    if: always()
 #    steps:
