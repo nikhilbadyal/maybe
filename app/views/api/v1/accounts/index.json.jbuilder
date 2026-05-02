@@ -4,6 +4,7 @@ json.accounts @accounts do |account|
   json.id account.id
   json.name account.name
   json.balance account.balance_money.format
+  json.balance_raw account.balance.to_s("F")
   json.currency account.currency
   json.classification account.classification
   json.account_type account.accountable_type.underscore

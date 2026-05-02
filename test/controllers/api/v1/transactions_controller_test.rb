@@ -130,8 +130,10 @@ class Api::V1::TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @transaction.id, response_data["id"]
     assert response_data.key?("name")
     assert response_data.key?("amount")
+    assert response_data.key?("amount_raw")
     assert response_data.key?("date")
     assert response_data.key?("account")
+    assert_match(/\A-?\d+(\.\d+)?\z/, response_data["amount_raw"])
   end
 
   test "should show transaction with read-only API key" do

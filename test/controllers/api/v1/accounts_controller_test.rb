@@ -161,7 +161,7 @@ end
     account = response_body["accounts"].first
 
     # Check required fields are present
-    required_fields = %w[id name balance currency classification account_type]
+    required_fields = %w[id name balance balance_raw currency classification account_type]
     required_fields.each do |field|
       assert account.key?(field), "Account should have #{field} field"
     end
@@ -170,6 +170,7 @@ end
     assert account["id"].is_a?(String), "ID should be string (UUID)"
     assert account["name"].is_a?(String), "Name should be string"
     assert account["balance"].is_a?(String), "Balance should be string (money)"
+    assert_match(/\A-?\d+(\.\d+)?\z/, account["balance_raw"], "Raw balance should be a decimal string")
     assert account["currency"].is_a?(String), "Currency should be string"
     assert %w[asset liability].include?(account["classification"]), "Classification should be asset or liability"
   end

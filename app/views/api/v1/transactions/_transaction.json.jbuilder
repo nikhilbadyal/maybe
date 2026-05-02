@@ -3,6 +3,7 @@
 json.id transaction.id
 json.date transaction.entry.date
 json.amount transaction.entry.amount_money.format
+json.amount_raw transaction.entry.amount.to_s("F")
 json.currency transaction.entry.currency
 json.name transaction.entry.name
 json.notes transaction.entry.notes
