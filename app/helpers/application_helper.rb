@@ -110,12 +110,14 @@ module ApplicationHelper
 
   private
     def calculate_total(item, money_method, negate)
-      # Filter out transfer-type transactions from entries
+      # Filter out transfer-type transactions and manually excluded transactions from entries
       # Only Entry objects have entryable transactions, Account objects don't
       items = item.reject do |i|
-        i.is_a?(Entry) &&
-        i.entryable.is_a?(Transaction) &&
-        i.entryable.transfer?
+        # Reject entry objects that represent transfers (which are non-spending movements)
+        # or have been explicitly marked as excluded by the user to prevent them from showing
+        # up in daily total and budgeting math.
+        (i.is_a?(Entry) && i.entryable.is_a?(Transaction) && i.entryable.transfer?) ||
+        (i.is_a?(Entry) && i.excluded?)
       end
       total = items.sum(&money_method)
       negate ? -total : total
