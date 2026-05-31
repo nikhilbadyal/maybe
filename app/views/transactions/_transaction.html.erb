@@ -34,8 +34,8 @@
             <%# Details wrapper uses min-w-0 and flex-1 to fill the flex container and allow inner truncation rather than using truncate which prevents flex-wrap %>
             <div class="min-w-0 flex-1">
               <div class="space-y-0.5">
-                <%# flex-wrap is used to let transfer-match badge wrap to the next line on narrow screens instead of hiding the transaction name %>
-                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                <%# flex-wrap is used on mobile to let transfer-match badge wrap, while lg:flex-nowrap prevents premature truncation on desktop %>
+                <div class="flex flex-wrap lg:flex-nowrap items-center gap-x-2 gap-y-1 min-w-0">
                   <div class="truncate flex-shrink">
                     <% if transaction.transfer? %>
                       <%= link_to(
