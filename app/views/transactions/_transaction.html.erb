@@ -31,9 +31,11 @@
               ) %>
             <% end %>
 
-            <div class="truncate">
+            <%# Details wrapper uses min-w-0 and flex-1 to fill the flex container and allow inner truncation rather than using truncate which prevents flex-wrap %>
+            <div class="min-w-0 flex-1">
               <div class="space-y-0.5">
-                <div class="flex items-center gap-1 min-w-0">
+                <%# flex-wrap is used to let transfer-match badge wrap to the next line on narrow screens instead of hiding the transaction name %>
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
                   <div class="truncate flex-shrink">
                     <% if transaction.transfer? %>
                       <%= link_to(
@@ -93,7 +95,8 @@
         <%= render "transactions/transaction_category", transaction: transaction %>
       </div>
 
-      <div class="col-span-2 ml-auto text-right">
+      <%# On mobile, since the category column is hidden, we let the amount take col-span-4 (matching the header layout) to prevent wrapping of negative sign or amount. On desktop, it takes col-span-2. %>
+      <div class="col-span-4 lg:col-span-2 ml-auto text-right whitespace-nowrap">
         <%= content_tag :p,
             transaction.transfer? && view_ctx == "global" ? "+/- #{format_money(entry.amount_money.abs)}" : format_money(-entry.amount_money),
             class: ["text-green-600": entry.amount.negative?] %>

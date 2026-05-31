@@ -25,7 +25,8 @@
         </div>
       </div>
 
-      <div class="col-span-4 justify-self-end">
+      <%# Using whitespace-nowrap to prevent the money format or negative sign from wrapping on narrow mobile screens %>
+      <div class="col-span-4 justify-self-end whitespace-nowrap">
         <%= tag.p format_money(entry.amount_money), class: "font-bold text-sm text-primary" %>
       </div>
     </div>

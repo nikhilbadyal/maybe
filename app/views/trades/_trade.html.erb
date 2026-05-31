@@ -29,11 +29,13 @@
         </div>
       </div>
 
-      <div class="col-span-2 flex items-center">
+      <%# Hiding the trade category on mobile to free up space, similar to transaction rows %>
+      <div class="hidden lg:flex col-span-2 items-center">
         <%= render "categories/badge", category: trade_category %>
       </div>
 
-      <div class="col-span-2 justify-self-end font-medium text-sm">
+      <%# Using col-span-4 on mobile and lg:col-span-2 on desktop to align with the list headers and prevent wrapping/overlapping of the amount %>
+      <div class="col-span-4 lg:col-span-2 justify-self-end font-medium text-sm whitespace-nowrap">
         <%= content_tag :p,
                     format_money(-entry.amount_money),
                     class: ["text-green-600": entry.amount.negative?] %>
