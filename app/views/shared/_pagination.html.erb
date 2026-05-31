@@ -15,22 +15,27 @@
         </div>
       <% end %>
     </div>
-    <div class="rounded-xl p-1 bg-container-inset">
+    <%# Wrapper container for series items styled as inline-flex to prevent wrapping on small screens %>
+    <div class="rounded-xl p-1 bg-container-inset inline-flex items-center">
       <% pagy.series.each do |series_item| %>
+        <%# Determine visibility on mobile screens: always show current page (string), first page, and last page %>
+        <% show_on_mobile = series_item.is_a?(String) || series_item == 1 || series_item == pagy.pages %>
+        <% mobile_class = show_on_mobile ? "" : "hidden sm:inline-flex" %>
+
         <% if series_item.is_a?(Integer) %>
           <%= link_to pagy_url_for(pagy, series_item),
                 data: { turbo_frame: :_top },
-                class: "rounded-md px-2 py-1 inline-flex items-center text-sm font-medium text-secondary hover:border-secondary hover:text-secondary" do %>
+                class: "rounded-md px-2 py-1 inline-flex items-center text-sm font-medium text-secondary hover:border-secondary hover:text-secondary #{mobile_class}" do %>
             <%= series_item %>
           <% end %>
         <% elsif series_item.is_a?(String) %>
           <%= link_to pagy_url_for(pagy, series_item),
                 data: { turbo_frame: :_top },
-                class: "rounded-md px-2 py-1 bg-container border border-secondary shadow-xs inline-flex items-center text-sm font-medium text-primary" do %>
+                class: "rounded-md px-2 py-1 bg-container border border-secondary shadow-xs inline-flex items-center text-sm font-medium text-primary #{mobile_class}" do %>
             <%= series_item %>
           <% end %>
         <% elsif series_item == :gap %>
-          <span class="inline-flex items-center px-2 py-1 text-sm font-medium text-secondary">...</span>
+          <span class="inline-flex items-center px-2 py-1 text-sm font-medium text-secondary <%= mobile_class %>">...</span>
         <% end %>
       <% end %>
     </div>
