@@ -14,7 +14,41 @@
           <div class="space-y-2">
             <%= form.collection_select :category_id, Current.family.categories.alphabetically, :id, :name, { prompt: "Select a category", label: "Category", class: "text-subdued" } %>
             <%= form.collection_select :merchant_id, Current.family.merchants.alphabetically, :id, :name, { prompt: "Select a merchant", label: "Merchant", class: "text-subdued" } %>
-            <%= form.select :tag_ids, Current.family.tags.alphabetically.pluck(:name, :id), { include_blank: "None", multiple: true, label: "Tags", container_class: "h-40" } %>
+            <%# Custom multi-select dropdown using details/summary and checkboxes to replace the clunky listbox %>
+            <div class="form-field relative" data-controller="multiselect-dropdown">
+              <details class="group w-full">
+                <summary class="flex items-center justify-between list-none cursor-pointer">
+                  <div class="space-y-0.5">
+                    <span class="block text-xs text-secondary">Tags</span>
+                    <%# Stimulus updates this label in real-time as checkboxes change %>
+                    <span class="text-sm text-primary font-medium block truncate" data-multiselect-dropdown-target="label">
+                      Select tags...
+                    </span>
+                  </div>
+                  <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+                </summary>
+
+                <div class="absolute left-0 right-0 z-50 mt-3 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                  <%# Hidden input to ensure that empty tags array is submitted to clear all tags %>
+                  <input type="hidden" name="bulk_update[tag_ids][]" value="">
+
+                  <% Current.family.tags.alphabetically.each do |tag| %>
+                    <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                      <%= check_box_tag "bulk_update[tag_ids][]",
+                                        tag.id,
+                                        false,
+                                        id: "bulk_tag_#{tag.id}",
+                                        class: "checkbox checkbox--light shrink-0",
+                                        data: {
+                                          "multiselect-dropdown-target": "checkbox",
+                                          action: "change->multiselect-dropdown#updateLabel"
+                                        } %>
+                      <span><%= tag.name %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </details>
+            </div>
             <%= form.text_area :notes, label: "Notes", placeholder: "Enter a note that will be applied to selected transactions", rows: 5 %>
           </div>
         <% end %>
