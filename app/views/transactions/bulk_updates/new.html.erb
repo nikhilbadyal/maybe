@@ -12,11 +12,102 @@
 
         <%= render DS::Disclosure.new(title: "Transactions", open: true) do %>
           <div class="space-y-2">
-            <%= form.collection_select :category_id, Current.family.categories.alphabetically, :id, :name, { prompt: "Select a category", label: "Category", class: "text-subdued" } %>
-            <%= form.collection_select :merchant_id, Current.family.merchants.alphabetically, :id, :name, { prompt: "Select a merchant", label: "Merchant", class: "text-subdued" } %>
+            <%# Custom single-select dropdown for Category in bulk updates to prevent mobile select flying bug %>
+            <div class="form-field relative" data-controller="select-dropdown">
+              <details class="group w-full" data-select-dropdown-target="details">
+                <summary class="flex items-center justify-between list-none cursor-pointer">
+                  <div class="space-y-0.5">
+                    <span class="block text-xs text-secondary">Category</span>
+                    <%# Stimulus updates this label in real-time as selection changes %>
+                    <span class="text-sm text-primary font-medium block truncate" data-select-dropdown-target="label">
+                      Select a category
+                    </span>
+                  </div>
+                  <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+                </summary>
+
+                <div class="absolute left-0 right-0 z-50 mt-1 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                  <%# Unselected prompt option %>
+                  <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                    <%= form.radio_button :category_id, "",
+                          checked: true,
+                          class: "peer hidden",
+                          data: {
+                            "select-dropdown-target": "radio",
+                            action: "change->select-dropdown#select"
+                          } %>
+                    <span>Select a category</span>
+                    <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                  </label>
+
+                  <%# List of categories %>
+                  <% Current.family.categories.alphabetically.each do |category| %>
+                    <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                      <%= form.radio_button :category_id, category.id,
+                            checked: false,
+                            class: "peer hidden",
+                            data: {
+                              "select-dropdown-target": "radio",
+                              action: "change->select-dropdown#select"
+                            } %>
+                      <span><%= category.name %></span>
+                      <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                    </label>
+                  <% end %>
+                </div>
+              </details>
+            </div>
+
+            <%# Custom single-select dropdown for Merchant in bulk updates to prevent mobile select flying bug %>
+            <div class="form-field relative" data-controller="select-dropdown">
+              <details class="group w-full" data-select-dropdown-target="details">
+                <summary class="flex items-center justify-between list-none cursor-pointer">
+                  <div class="space-y-0.5">
+                    <span class="block text-xs text-secondary">Merchant</span>
+                    <%# Stimulus updates this label in real-time as selection changes %>
+                    <span class="text-sm text-primary font-medium block truncate" data-select-dropdown-target="label">
+                      Select a merchant
+                    </span>
+                  </div>
+                  <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+                </summary>
+
+                <div class="absolute left-0 right-0 z-50 mt-1 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                  <%# Unselected prompt option %>
+                  <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                    <%= form.radio_button :merchant_id, "",
+                          checked: true,
+                          class: "peer hidden",
+                          data: {
+                            "select-dropdown-target": "radio",
+                            action: "change->select-dropdown#select"
+                          } %>
+                    <span>Select a merchant</span>
+                    <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                  </label>
+
+                  <%# List of merchants %>
+                  <% Current.family.merchants.alphabetically.each do |merchant| %>
+                    <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                      <%= form.radio_button :merchant_id, merchant.id,
+                            checked: false,
+                            class: "peer hidden",
+                            data: {
+                              "select-dropdown-target": "radio",
+                              action: "change->select-dropdown#select"
+                            } %>
+                      <span><%= merchant.name %></span>
+                      <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                    </label>
+                  <% end %>
+                </div>
+              </details>
+            </div>
+
             <%# Custom multi-select dropdown using details/summary and checkboxes to replace the clunky listbox %>
             <div class="form-field relative" data-controller="multiselect-dropdown">
-              <details class="group w-full">
+              <%# Added data-multiselect-dropdown-target="details" to support closing on click-outside %>
+              <details class="group w-full" data-multiselect-dropdown-target="details">
                 <summary class="flex items-center justify-between list-none cursor-pointer">
                   <div class="space-y-0.5">
                     <span class="block text-xs text-secondary">Tags</span>

@@ -72,7 +72,52 @@
       <%= styled_form_with model: @transfer,
               data: { controller: "auto-submit-form" }, class: "space-y-2" do |f| %>
         <% if @transfer.categorizable? %>
-          <%= f.collection_select :category_id, @categories.alphabetically, :id, :name, { label: "Category", include_blank: "Uncategorized", selected: @transfer.outflow_transaction.category&.id }, "data-auto-submit-form-target": "auto" %>
+          <%# Custom single-select dropdown using details/summary and hidden radio buttons. %>
+          <%# This provides a unified premium style matching Tags and avoids native mobile select coordinate bugs. %>
+          <div class="form-field relative" data-controller="select-dropdown">
+            <details class="group w-full" data-select-dropdown-target="details">
+              <summary class="flex items-center justify-between list-none cursor-pointer">
+                <div class="space-y-0.5">
+                  <span class="block text-xs text-secondary">Category</span>
+                  <%# The display label is managed by the select-dropdown Stimulus controller %>
+                  <span class="text-sm text-primary font-medium block truncate" data-select-dropdown-target="label">
+                    <%= @transfer.outflow_transaction.category&.name || "Uncategorized" %>
+                  </span>
+                </div>
+                <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+              </summary>
+
+              <div class="absolute left-0 right-0 z-50 mt-1 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                <%# Radio input option for Uncategorized (empty category ID value) %>
+                <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                  <%= f.radio_button :category_id, "",
+                        checked: @transfer.outflow_transaction.category_id.nil?,
+                        class: "peer hidden",
+                        data: {
+                          "select-dropdown-target": "radio",
+                          action: "change->select-dropdown#select change->auto-submit-form#submit"
+                        } %>
+                  <span>Uncategorized</span>
+                  <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                </label>
+
+                <%# Iterates and renders all transfer categories as selectable radio options %>
+                <% @categories.alphabetically.each do |category| %>
+                  <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                    <%= f.radio_button :category_id, category.id,
+                          checked: @transfer.outflow_transaction.category_id == category.id,
+                          class: "peer hidden",
+                          data: {
+                            "select-dropdown-target": "radio",
+                            action: "change->select-dropdown#select change->auto-submit-form#submit"
+                          } %>
+                    <span><%= category.name %></span>
+                    <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                  </label>
+                <% end %>
+              </div>
+            </details>
+          </div>
         <% end %>
 
         <%= f.text_area :notes,

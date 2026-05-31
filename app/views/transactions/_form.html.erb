@@ -32,7 +32,8 @@
   <%= render DS::Disclosure.new(title: t(".details")) do %>
       <%# Custom multi-select dropdown using details/summary and checkboxes to replace the clunky listbox %>
       <div class="form-field relative" data-controller="multiselect-dropdown">
-        <details class="group w-full">
+        <%# Adding data target details so the Stimulus controller can handle click-outside close behavior %>
+        <details class="group w-full" data-multiselect-dropdown-target="details">
           <summary class="flex items-center justify-between list-none cursor-pointer">
             <div class="space-y-0.5">
               <span class="block text-xs text-secondary"><%= t(".tags_label") %></span>

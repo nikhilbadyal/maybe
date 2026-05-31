@@ -38,12 +38,52 @@
             </div>
 
             <%= f.fields_for :entryable do |ef| %>
-              <%= ef.collection_select :category_id,
-                      Current.family.categories.alphabetically,
-                    :id, :name,
-                    { label: t(".category_label"),
-                      class: "text-subdued", include_blank: t(".uncategorized") },
-                    "data-auto-submit-form-target": "auto" %>
+              <%# Custom single-select dropdown using details/summary and hidden radio buttons. %>
+              <%# This provides a unified premium style matching Tags and avoids native mobile select coordinate bugs. %>
+              <div class="form-field relative" data-controller="select-dropdown">
+                <details class="group w-full" data-select-dropdown-target="details">
+                  <summary class="flex items-center justify-between list-none cursor-pointer">
+                    <div class="space-y-0.5">
+                      <span class="block text-xs text-secondary"><%= t(".category_label") %></span>
+                      <%# The display label is managed by the select-dropdown Stimulus controller %>
+                      <span class="text-sm text-primary font-medium block truncate" data-select-dropdown-target="label">
+                        <%= @entry.transaction.category&.name || t(".uncategorized") %>
+                      </span>
+                    </div>
+                    <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+                  </summary>
+
+                  <div class="absolute left-0 right-0 z-50 mt-1 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                    <%# Radio input option for Uncategorized (empty category ID value) %>
+                    <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                      <%= ef.radio_button :category_id, "",
+                            checked: @entry.transaction.category_id.nil?,
+                            class: "peer hidden",
+                            data: {
+                              "select-dropdown-target": "radio",
+                              action: "change->select-dropdown#select change->auto-submit-form#submit"
+                            } %>
+                      <span><%= t(".uncategorized") %></span>
+                      <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                    </label>
+
+                    <%# Iterates and renders all family categories as selectable radio options %>
+                    <% Current.family.categories.alphabetically.each do |category| %>
+                      <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                        <%= ef.radio_button :category_id, category.id,
+                              checked: @entry.transaction.category_id == category.id,
+                              class: "peer hidden",
+                              data: {
+                                "select-dropdown-target": "radio",
+                                action: "change->select-dropdown#select change->auto-submit-form#submit"
+                              } %>
+                        <span><%= category.name %></span>
+                        <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                      </label>
+                    <% end %>
+                  </div>
+                </details>
+              </div>
             <% end %>
           <% end %>
 
@@ -68,17 +108,57 @@
 
             <%= f.fields_for :entryable do |ef| %>
 
-              <%= ef.collection_select :merchant_id,
-                    [@entry.transaction.merchant, *Current.family.merchants.alphabetically].compact,
-                    :id, :name,
-                    { include_blank: t(".none"),
-                      label: t(".merchant_label"),
-                      class: "text-subdued" },
-                    "data-auto-submit-form-target": "auto" %>
+              <%# Custom single-select dropdown using details/summary and hidden radio buttons. %>
+              <%# This provides a unified premium style matching Tags and avoids native mobile select coordinate bugs. %>
+              <div class="form-field relative" data-controller="select-dropdown">
+                <details class="group w-full" data-select-dropdown-target="details">
+                  <summary class="flex items-center justify-between list-none cursor-pointer">
+                    <div class="space-y-0.5">
+                      <span class="block text-xs text-secondary"><%= t(".merchant_label") %></span>
+                      <%# The display label is managed by the select-dropdown Stimulus controller %>
+                      <span class="text-sm text-primary font-medium block truncate" data-select-dropdown-target="label">
+                        <%= @entry.transaction.merchant&.name || t(".none") %>
+                      </span>
+                    </div>
+                    <%= icon "chevron-down", size: "sm", class: "text-secondary transition-transform group-open:rotate-180" %>
+                  </summary>
+
+                  <div class="absolute left-0 right-0 z-50 mt-1 p-2 bg-container shadow-lg border border-secondary rounded-lg space-y-2 max-h-48 overflow-y-auto">
+                    <%# Radio input option for None (empty merchant ID value) %>
+                    <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                      <%= ef.radio_button :merchant_id, "",
+                            checked: @entry.transaction.merchant_id.nil?,
+                            class: "peer hidden",
+                            data: {
+                              "select-dropdown-target": "radio",
+                              action: "change->select-dropdown#select change->auto-submit-form#submit"
+                            } %>
+                      <span><%= t(".none") %></span>
+                      <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                    </label>
+
+                    <%# Iterates and renders all family merchants (with current merchant pre-pended and deduplicated) %>
+                    <% [@entry.transaction.merchant, *Current.family.merchants.alphabetically].compact.uniq.each do |merchant| %>
+                      <label class="flex items-center justify-between px-2 py-1.5 hover:bg-surface-hover rounded-md cursor-pointer text-sm text-primary">
+                        <%= ef.radio_button :merchant_id, merchant.id,
+                              checked: @entry.transaction.merchant_id == merchant.id,
+                              class: "peer hidden",
+                              data: {
+                                "select-dropdown-target": "radio",
+                                action: "change->select-dropdown#select change->auto-submit-form#submit"
+                              } %>
+                        <span><%= merchant.name %></span>
+                        <%= icon "check", size: "sm", class: "hidden peer-checked:block text-primary" %>
+                      </label>
+                    <% end %>
+                  </div>
+                </details>
+              </div>
 
               <%# Custom multi-select dropdown using details/summary and checkboxes to replace the clunky listbox %>
               <div class="form-field relative" data-controller="multiselect-dropdown">
-                <details class="group w-full">
+                <%# Added data-multiselect-dropdown-target="details" to support closing on click-outside %>
+                <details class="group w-full" data-multiselect-dropdown-target="details">
                   <summary class="flex items-center justify-between list-none cursor-pointer">
                     <div class="space-y-0.5">
                       <span class="block text-xs text-secondary"><%= t(".tags_label") %></span>
