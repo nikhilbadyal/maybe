@@ -1,13 +1,16 @@
 <%# locals: (account:, return_to: nil) %>
 
 <%= turbo_frame_tag dom_id(account) do %>
+  <%# Uses flex justify-between with gap-3. The left child takes remaining space and truncates, the right child shrinks to content. %>
   <div class="p-4 flex items-center justify-between gap-3 group/account">
-    <div class="flex items-center gap-3">
+    <%# Left side: min-w-0 and flex-1 allows name truncation to work properly in nested flexboxes %>
+    <div class="flex items-center gap-3 min-w-0 flex-1">
       <%= render "accounts/logo", account: account, size: "md" %>
 
-      <div>
+      <%# Details wrapper uses min-w-0 flex-1 to allow link_to and subtext to truncate %>
+      <div class="min-w-0 flex-1">
         <% if account.pending_deletion? %>
-          <p class="text-sm font-medium text-primary">
+          <p class="text-sm font-medium text-primary truncate">
             <span>
               <%= account.name %>
             </span>
@@ -16,7 +19,8 @@
             </span>
           </p>
         <% else %>
-          <%= link_to account.name, account, class: [(account.active? ? "text-primary" : "text-subdued"), "text-sm font-medium hover:underline"], data: { turbo_frame: "_top" } %>
+          <%# block and truncate classes are added to link_to so that long account names truncate with an ellipsis on a single line instead of wrapping %>
+          <%= link_to account.name, account, class: [(account.active? ? "text-primary" : "text-subdued"), "text-sm font-medium hover:underline block truncate"], data: { turbo_frame: "_top" } %>
           <% if account.long_subtype_label %>
             <p class="text-sm text-secondary truncate"><%= account.long_subtype_label %></p>
           <% end %>
@@ -30,18 +34,20 @@
           size: :sm,
           icon: "pencil-line",
           frame: "modal",
-          class: "hidden group-hover/account:flex focus-visible:flex hover:opacity-80",
+          class: "hidden group-hover/account:flex focus-visible:flex hover:opacity-80 shrink-0",
           "aria-label": "Edit account"
         ) %>
       <% end %>
     </div>
-    <div class="flex items-center gap-8">
+    <%# Right side: gap is reduced to gap-3 on mobile to prevent overflow, and shrink-0 ensures the balance + toggle are never compressed or pushed off-screen %>
+    <div class="flex items-center gap-3 sm:gap-8 shrink-0">
       <% if account.draft? %>
         <!-- Balance hidden for draft accounts -->
       <% elsif account.syncing? %>
         <div class="w-16 h-6 bg-loader rounded-full animate-pulse"></div>
       <% else %>
-        <p class="text-sm font-medium <%= account.active? ? "text-primary" : "text-subdued" %>">
+        <%# whitespace-nowrap prevents negative/positive currency amounts from wrapping onto a second line %>
+        <p class="text-sm font-medium <%= account.active? ? "text-primary" : "text-subdued" %> whitespace-nowrap">
           <%= format_money account.balance_money %>
         </p>
       <% end %>
