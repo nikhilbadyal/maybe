@@ -376,6 +376,11 @@
     background-size: 1.25rem 1.25rem;
   }
 
+  /* Prevents textareas sharing the form-field__input class from inheriting single-line constraints like whitespace-nowrap and overflow-hidden */
+  textarea.form-field__input {
+    @apply whitespace-normal overflow-auto;
+  }
+
   .form-field__radio {
     @apply text-primary;
   }

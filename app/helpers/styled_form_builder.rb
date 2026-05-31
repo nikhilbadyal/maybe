@@ -14,6 +14,17 @@ class StyledFormBuilder < ActionView::Helpers::FormBuilder
     RUBY_EVAL
   end
 
+  # Rails FormBuilder does not include :text_area in field_helpers by default.
+  # We define it manually to ensure it is wrapped in .form-field, supports labels, and inherits form styling.
+  def text_area(method, options = {})
+    form_options = options.slice(:label, :label_tooltip, :inline, :container_class, :required)
+    html_options = options.except(:label, :label_tooltip, :inline, :container_class)
+
+    build_field(method, form_options, html_options) do |merged_options|
+      super(method, merged_options)
+    end
+  end
+
   def radio_button(method, tag_value, options = {})
     merged_options = { class: "form-field__radio" }.merge(options)
     super(method, tag_value, merged_options)
