@@ -5,24 +5,13 @@ class Family::SyncCompleteEvent
     @family = family
   end
 
+  # Broadcasts a page refresh to all browsers subscribed to the family's updates.
+  # Instead of selectively replacing parts of the dashboard with hardcoded defaults
+  # (which previously forced the Net Worth chart to reset to 30D, ignoring user default
+  # or currently selected period preferences), this triggers a full Turbo 8 page
+  # refresh. Turbo morphs the body to the fresh data, preserving user interaction
+  # state, selected period filters, and page context across the entire app.
   def broadcast
-    family.broadcast_replace(
-      target: "balance-sheet",
-      partial: "pages/dashboard/balance_sheet",
-      locals: { balance_sheet: family.balance_sheet }
-    )
-
-    family.broadcast_replace(
-      target: "net-worth-chart",
-      partial: "pages/dashboard/net_worth_chart",
-      locals: { balance_sheet: family.balance_sheet, period: Period.last_30_days }
-    )
-
-    # Update sync all button on accounts page
-    family.broadcast_replace(
-      target: "sync_all_button",
-      partial: "accounts/sync_all_button_frame",
-      locals: { family: family, manual_accounts: family.accounts.manual.alphabetically, plaid_items: family.plaid_items.ordered }
-    )
+    family.broadcast_refresh
   end
 end

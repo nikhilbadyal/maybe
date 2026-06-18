@@ -23,12 +23,23 @@ export default class extends Controller {
     this._install();
     document.addEventListener("turbo:load", this._reinstall);
     this._setupResizeObserver();
+    // Track connection state to ensure value change callbacks only run when connected and DOM is ready.
+    this._connected = true;
   }
 
   disconnect() {
     this._teardown();
     document.removeEventListener("turbo:load", this._reinstall);
     this._resizeObserver?.disconnect();
+    // Reset connection state.
+    this._connected = false;
+  }
+
+  // Redraw the chart when the `data` value is updated (e.g. via Turbo morphing or dynamic updates).
+  dataValueChanged() {
+    if (this._connected) {
+      this._reinstall();
+    }
   }
 
   _reinstall = () => {
